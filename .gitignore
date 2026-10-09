@@ -1,0 +1,29 @@
+node_modules/
+dist/
+docs/.vuepress/.cache/
+docs/.vuepress/.temp/
+docs/.vuepress/dist/
+*.log
+.DS_Store
+
+# Obsidian workspace files (keep Markdown and media, ignore local UI state)
+.obsidian/workspace.json
+.obsidian/workspaces.json
+.obsidian/cache
+.obsidian/plugins/
+.obsidian/graph.json
+.obsidian/bookmarks.json
+.trash/
+
+# Local package-manager cache created for troubleshooting
+.npm-cache-temp/
+.inspect/
+.verification/
+
+# Editor, local credentials and package caches
+.env
+.env.*
+!.env.example
+.pnpm-store/
+.obsidian/workspace-mobile.json
+.obsidian/plugins/obsidian-git/data.json

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="180" viewBox="0 0 640 180" role="img" aria-labelledby="title desc">
+  <title id="title">Markdown knowledge base placeholder</title>
+  <desc id="desc">A small local SVG used to verify Markdown asset paths.</desc>
+  <rect width="640" height="180" rx="20" fill="#f1f5f9"/>
+  <path d="M78 48h484v84H78z" fill="#0f172a"/>
+  <path d="M112 81h120M112 108h244" stroke="#93c5fd" stroke-width="10" stroke-linecap="round"/>
+  <text x="380" y="101" fill="#fff" font-family="sans-serif" font-size="22">Markdown → Pages</text>
+</svg>
