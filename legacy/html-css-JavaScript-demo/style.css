@@ -13,13 +13,13 @@ body {
   margin: 20px;
   padding: 32px;
   border-radius: 16px;
-  background: white;
+  background: rgb(166, 107, 107);
   text-align: center;
 }
 
 /* JavaScript 添加 highlight 类名时，这条样式就会生效。 */
 #card.highlight {
-  background: #dbeafe;
+  background: #36547b;
 }
 
 button {
