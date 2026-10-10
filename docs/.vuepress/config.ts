@@ -7,7 +7,8 @@ import { plumeTheme } from 'vuepress-theme-plume'
  * DOCS_BASE lets GitHub Pages provide a repository-aware base path.
  * It defaults to `/` for the current user-site repository and local preview.
  */
-const base = `/${(process.env.DOCS_BASE || '').replace(/^\/+|\/+$/g, '')}/`.replace('//', '/')
+const basePath = (process.env.DOCS_BASE || '').replace(/^\/+|\/+$/g, '')
+const base: '/' | `/${string}/` = basePath ? `/${basePath}/` : '/'
 
 export default defineUserConfig({
   base,
