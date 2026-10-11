@@ -1,5 +1,6 @@
 ---
 title: Markdown
+pageLayout: home
 ---
 
 # Markdown
