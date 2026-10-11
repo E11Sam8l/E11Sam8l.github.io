@@ -40,18 +40,11 @@ config:
     full: true
 ---
 
-<div class="vice-about">
-  <p class="vice-eyebrow">03 / ABOUT ME</p>
-  <h2>你好，<br>我们是 Laplace and E11SAM8L。</h2>
-  <p class="vice-about-intro">这是一个用于记录知识、学习过程、项目实践和个人思考的空间。</p>
-  <p class="vice-about-note">从学习笔记到动手实践，让每一次探索都留下痕迹。</p>
-  <a class="vice-about-link" :href="withBase('/about/')">进入我的个人主页 ↗</a>
-</div>
+<CoastalDistrict />
 
 <!-- 三个章节连续滚动，动画进度直接跟随滚动距离。 -->
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
-import { withBase } from 'vuepress/client'
 
 let cleanup = () => {}
 onMounted(() => {
@@ -61,6 +54,7 @@ onMounted(() => {
   if (scenes.some(scene => !scene)) return
   const panels = scenes.map(scene => scene.parentElement)
   const cards = [...scenes[1].querySelectorAll('.item')]
+  const district = scenes[2].querySelector('.coastal-district')
   const title = home.querySelector('.vice-home-title')
   const connector = title?.querySelector('.vice-home-connector')
   const heading = home.querySelector('.hero-name')
@@ -79,6 +73,10 @@ onMounted(() => {
       const entrance = clamp(1 - Math.max(0, offset) / viewport)
       const duration = Math.max(1, panel.offsetHeight - scenes[index].offsetHeight)
       const departure = index === 2 ? 0 : clamp(-offset / duration)
+      if (index === 2 && district) {
+        const districtProgress = clamp(-offset / Math.max(1, duration))
+        district.style.setProperty('--world-progress', String(motion.matches ? 1 : districtProgress))
+      }
       const fade = index === 0 ? departure * .9 : Math.max(1 - entrance, clamp((departure - .35) / .65)) * .85
       panel.style.setProperty('--vice-panel-opacity', String(motion.matches ? 1 : 1 - fade))
       panel.style.setProperty('--vice-panel-scale', String(motion.matches ? 1 : index === 0 ? 1 + departure * .35 : 1 - (1 - entrance) * .08 + departure * .06))
@@ -118,6 +116,7 @@ onMounted(() => {
     cancelAnimationFrame(frame)
     home.classList.remove('vice-three-screens')
     panels.forEach(panel => panel.classList.remove('vice-screen'))
+    district?.style.removeProperty('--world-progress')
     home.removeAttribute('tabindex')
     home.removeAttribute('aria-label')
   }
@@ -305,7 +304,7 @@ onUnmounted(() => cleanup())
 }
 .vice-three-screens .hero-content,
 .vice-three-screens .vp-home-features > .container,
-.vice-three-screens .vice-about {
+.vice-three-screens .coastal-district {
   transform: translateY(var(--vice-panel-y, 0px)) scale(var(--vice-panel-scale, 1));
   opacity: var(--vice-panel-opacity, 1); will-change: transform, opacity;
 }
@@ -347,12 +346,6 @@ onUnmounted(() => cleanup())
 .vp-home.vice-three-screens .vp-home-custom {
   background: var(--vice-about-background);
 }
-.vice-about { max-width: 880px; margin: auto; text-align: left; }
-.vice-about .vice-eyebrow { color: #ffb493; font-size: 13px; letter-spacing: .24em; }
-.vice-about h2 { margin: 28px 0; color: #fff1f5; font-size: clamp(30px, 4.4vw, 62px); line-height: 1.2; border: 0; }
-.vice-about-intro { max-width: 660px; color: #e9cddd; font-size: 20px; line-height: 1.8; }
-.vice-about-note { color: #bba5bd; }
-.vice-about .vice-about-link { display: inline-block; margin-top: 28px; padding: 12px 24px; color: #25132f; background: linear-gradient(110deg, #ffb493, #ff8fbd); border-radius: 30px; text-decoration: none; }
 .vp-layout:has(.vice-three-screens) .vp-footer,
 .vp-layout:has(.vice-three-screens) .vp-back-to-top,
 .vp-layout:has(.vice-three-screens) .vp-sign-down { display: none !important; }
@@ -368,7 +361,6 @@ onUnmounted(() => cleanup())
   .vice-three-screens .vp-home-feature .box { padding: 14px; }
   .vice-three-screens .vp-home-feature .icon { display: none; }
   .vice-three-screens .vp-home-feature .details { font-size: 13px; }
-  .vice-about-intro { font-size: 16px; }
 }
 @media (max-height: 650px) and (min-width: 641px) {
   .vp-home.vice-three-screens .vice-home-title { font-size: min(82px, 5.9vw); }
@@ -383,6 +375,6 @@ onUnmounted(() => cleanup())
   .vice-three-screens .vp-home-feature { animation: none !important; }
   .vice-three-screens .hero-content,
   .vice-three-screens .vp-home-features > .container,
-  .vice-three-screens .vice-about { transform: none; opacity: 1; }
+  .vice-three-screens .coastal-district { transform: none; opacity: 1; }
 }
 </style>
