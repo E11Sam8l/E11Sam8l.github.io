@@ -7,6 +7,11 @@ export default defineThemeConfig({
   navbar,
   collections,
   outline: 'deep',
+  transition: {
+    page: true,
+    postList: true,
+    appearance: 'soft-blur-fade',
+  },
   // 使用 VuePress 原生文件路径，构建不自动写入日期和随机链接。
   autoFrontmatter: false,
 })

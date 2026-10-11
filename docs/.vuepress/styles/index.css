@@ -1,0 +1,217 @@
+/*
+ * West Coast Night Archive
+ *
+ * This file is the small, shared visual foundation for every Plume page.
+ * Page-specific treatment can build on these variables without replacing
+ * the theme layout or its Markdown rendering.
+ */
+
+:root {
+  /* Site palette */
+  --site-ink: #0b1320;
+  --site-midnight: #14263b;
+  --site-paper: #f7f2e8;
+  --site-mist: #e7ece9;
+  --site-coral: #d65d4a;
+  --site-coral-bright: #f58a6b;
+  --site-aqua: #197f87;
+  --site-aqua-bright: #6fd5cf;
+  --site-rose: #b66c95;
+
+  /* Plume/VuePress functional tokens */
+  --vp-c-brand-1: var(--site-coral);
+  --vp-c-brand-2: #bd4c3c;
+  --vp-c-brand-3: #a83e31;
+  --vp-c-brand-soft: rgb(214 93 74 / 0.14);
+  --vp-c-bg: var(--site-paper);
+  --vp-c-bg-alt: #eee9df;
+  --vp-c-bg-elv: #fffdf8;
+  --vp-c-bg-soft: var(--site-mist);
+  --vp-c-bg-safe: #f0f4f1;
+  --vp-c-text-1: var(--site-ink);
+  --vp-c-text-2: #40515c;
+  --vp-c-text-3: #70808a;
+  --vp-c-border: #c7d0cf;
+  --vp-c-divider: #d9ddd8;
+  --vp-c-gutter: #e1e4df;
+  --vp-c-default-soft: rgb(20 38 59 / 0.08);
+
+  /* Type and rhythm */
+  --vp-font-family-base: 'Avenir Next', 'Segoe UI', 'Noto Sans SC', sans-serif;
+  --vp-font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --vp-layout-max-width: 1440px;
+  --content-width: 1280px;
+  --vp-t-color: 180ms ease;
+  --vp-t-transform: 220ms ease;
+
+  /* Page families override this accent while sharing the same component CSS. */
+  --site-section-accent: var(--site-coral);
+  --site-section-soft: var(--vp-c-brand-soft);
+}
+
+[data-theme='dark'] {
+  --vp-c-brand-1: var(--site-coral-bright);
+  --vp-c-brand-2: #ffab91;
+  --vp-c-brand-3: #e97861;
+  --vp-c-brand-soft: rgb(245 138 107 / 0.18);
+  --vp-c-bg: var(--site-ink);
+  --vp-c-bg-alt: #111e2d;
+  --vp-c-bg-elv: #182b3d;
+  --vp-c-bg-soft: #16283a;
+  --vp-c-bg-safe: #102231;
+  --vp-c-text-1: #f7f2e8;
+  --vp-c-text-2: #c5d0d0;
+  --vp-c-text-3: #8fa1a8;
+  --vp-c-border: #2f4857;
+  --vp-c-divider: #233c4b;
+  --vp-c-gutter: #1e3544;
+  --vp-c-default-soft: rgb(231 236 233 / 0.1);
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--vp-c-bg);
+}
+
+body {
+  min-width: 320px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  font-family: var(--vp-font-family-base);
+  text-rendering: optimizeLegibility;
+}
+
+.vp-layout {
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.22), transparent 38%),
+    var(--vp-c-bg);
+}
+
+[data-theme='dark'] .vp-layout {
+  background:
+    linear-gradient(135deg, rgb(111 213 207 / 0.035), transparent 38%),
+    var(--vp-c-bg);
+}
+
+.vp-nav {
+  background: color-mix(in srgb, var(--vp-c-bg) 88%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--site-section-accent) 24%, var(--vp-c-divider));
+  backdrop-filter: blur(14px);
+}
+
+.vp-nav .vp-link,
+.vp-sidebar .vp-link,
+.vp-doc a {
+  transition: color var(--vp-t-color), background-color var(--vp-t-color), border-color var(--vp-t-color);
+}
+
+.vp-nav .vp-link:hover,
+.vp-nav .vp-link.active,
+.vp-sidebar .vp-link.active {
+  color: var(--site-section-accent);
+}
+
+.vp-content:not(.is-home) {
+  background: var(--vp-c-bg);
+}
+
+.vp-doc {
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.vp-doc :where(p, li) {
+  max-width: 78ch;
+}
+
+.vp-doc :where(h1, h2, h3, h4) {
+  color: var(--vp-c-text-1);
+  letter-spacing: -0.015em;
+}
+
+.vp-doc :where(h2, h3) {
+  scroll-margin-top: calc(var(--vp-nav-height) + 24px);
+}
+
+.vp-doc :where(a, .header-anchor) {
+  color: var(--site-section-accent);
+}
+
+.vp-doc :where(a:hover, .header-anchor:hover) {
+  color: var(--site-coral-bright);
+}
+
+.vp-doc :where(code:not(.custom-block code)) {
+  color: var(--site-aqua);
+  background: var(--site-section-soft);
+}
+
+.vp-sidebar {
+  border-right-color: var(--vp-c-divider);
+  background: var(--vp-c-bg-alt);
+}
+
+.vp-doc-aside {
+  --vp-c-brand-1: var(--site-section-accent);
+}
+
+html.collection-doc-knowledge {
+  --site-section-accent: var(--site-aqua);
+  --site-section-soft: rgb(25 127 135 / 0.13);
+}
+
+html.layout-posts,
+html.collection-post-blog {
+  --site-section-accent: var(--site-coral);
+  --site-section-soft: rgb(214 93 74 / 0.13);
+}
+
+html:has(.vp-doc[class*='_projects']) {
+  --site-section-accent: var(--site-rose);
+  --site-section-soft: rgb(182 108 149 / 0.14);
+}
+
+html:has(.vp-doc[class*='_about']) {
+  --site-section-accent: var(--site-coral);
+  --site-section-soft: rgb(214 93 74 / 0.13);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--site-section-accent);
+  outline-offset: 3px;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: ease-out;
+}
+
+@media (max-width: 720px) {
+  .vp-doc {
+    font-size: 15px;
+  }
+
+  .vp-nav {
+    backdrop-filter: blur(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

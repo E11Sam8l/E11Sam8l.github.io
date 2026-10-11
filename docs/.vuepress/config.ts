@@ -15,6 +15,7 @@ export default defineUserConfig({
   lang: 'zh-CN',
   title: '个人知识库与博客',
   description: '用 Markdown 持续记录知识、项目与思考。',
+  userStyle: './.vuepress/styles/index.css',
   bundler: viteBundler({
     // Vue 3.5 resolves imported types in theme SFCs through this Node fs adapter.
     vuePluginOptions: {
