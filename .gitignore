@@ -3,7 +3,6 @@ dist/
 docs/.vuepress/.cache/
 docs/.vuepress/.temp/
 docs/.vuepress/dist/
-docs/.vuepress/styles/
 *.log
 .DS_Store
 
