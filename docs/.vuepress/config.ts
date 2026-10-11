@@ -26,6 +26,8 @@ export default defineUserConfig({
     },
   }),
   theme: plumeTheme({
+    // Keep source Markdown unchanged while plume.config.ts reloads on restart.
+    autoFrontmatter: false,
     search: { provider: 'local' },
     plugins: { git: false },
     contributors: false,
