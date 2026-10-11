@@ -5,6 +5,8 @@ description: 在日落与霓虹之间，记录知识、项目与思考。
 config:
   - type: hero
     full: true
+    #强制主页使用深色模式
+    forceDark: true
     # effect: tint-plate
     # # 分别配置明暗模式下的动态色板。
     # effectConfig:
