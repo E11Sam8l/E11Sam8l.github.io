@@ -1,6 +1,5 @@
 ---
 title: 项目
-pageLayout: home
 ---
 
 # 项目

@@ -1,6 +1,5 @@
 ---
 title: 关于
-pageLayout: home
 ---
 
 # 关于

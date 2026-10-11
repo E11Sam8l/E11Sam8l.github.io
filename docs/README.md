@@ -1,6 +1,6 @@
 ---
 pageLayout: home
-title: 个人知识库与博客
+title: 个人主页
 description: 在日落与霓虹之间，记录知识、项目与思考。
 config:
   - type: hero

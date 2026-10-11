@@ -1,6 +1,5 @@
 ---
 title: 博客
-pageLayout: home
 ---
 
 # 博客
