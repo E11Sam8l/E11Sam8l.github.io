@@ -21,37 +21,26 @@
 .vice-about-layout .vp-nav-screen-appearance { display: none; }
 
 .duo-about {
+  display: flex;
+  flex-direction: column;
   min-height: calc(100svh - var(--vp-nav-height));
   background: #151022;
   color: #fff2ed;
 }
-.duo-masthead {
-  display: flex;
+.duo-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  flex-shrink: 0;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
   min-height: 88px;
   padding: 20px clamp(24px, 4.4vw, 80px);
-  border-bottom: 1px solid #edc3e51c;
+  border-top: 1px solid #edc3e51c;
 }
-.duo-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border: 1px solid #ffc6cd40;
-  border-radius: 6px;
-  color: #f9d1d5;
-  font-size: 13px;
-  white-space: nowrap;
-  transition: border-color .2s, background-color .2s;
-}
-.duo-back:hover { border-color: #ffb0b6; background: #ffb0b610; }
-.duo-back:focus-visible { outline: 2px solid #ffb0b6; outline-offset: 4px; }
-.duo-masthead h1 { display: flex; align-items: center; gap: 14px; margin: 0; font-size: 16px; font-weight: 500; letter-spacing: .16em; }
-.duo-masthead h1 span { color: #bba2c0; font-size: 10px; letter-spacing: .18em; }
-.duo-masthead-note { color: #bba2c0; font-size: 12px; letter-spacing: .12em; }
-.duo-panels { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: calc(100svh - var(--vp-nav-height) - 88px); }
+.duo-footer h1 { grid-column: 2; display: flex; align-items: center; gap: 14px; margin: 0; font-size: 16px; font-weight: 500; letter-spacing: .16em; }
+.duo-footer h1 span { color: #bba2c0; font-size: 10px; letter-spacing: .18em; }
+.duo-footer-note { grid-column: 3; justify-self: end; color: #bba2c0; font-size: 12px; letter-spacing: .12em; }
+.duo-panels { position: relative; display: grid; flex: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: calc(100svh - var(--vp-nav-height) - 88px); }
 .duo-profile { position: relative; isolation: isolate; display: flex; min-width: 0; overflow: hidden; }
 .duo-profile--laplace {
   --duo-accent: #8ee5ec;
@@ -154,10 +143,10 @@
   .duo-avatar { flex-basis: 72px; width: 72px; height: 72px; }
 }
 @media (max-width: 800px) {
-  .duo-masthead { min-height: 76px; padding: 16px 24px; gap: 16px; }
-  .duo-masthead h1 { display: block; font-size: 14px; }
-  .duo-masthead h1 span { display: block; margin-top: 6px; font-size: 8px; }
-  .duo-masthead-note { display: none; }
+  .duo-footer { grid-template-columns: minmax(0, 1fr); min-height: 76px; padding: 16px 24px; gap: 10px; text-align: center; }
+  .duo-footer h1 { grid-column: 1; justify-self: center; font-size: 14px; }
+  .duo-footer h1 span { font-size: 8px; }
+  .duo-footer-note { grid-column: 1; justify-self: center; font-size: 11px; }
   .duo-panels { grid-template-columns: minmax(0, 1fr); }
   .duo-profile + .duo-profile { border-top: 1px solid #f8cbe640; }
   .duo-profile-content { min-height: 600px; padding: 32px 28px; }
@@ -179,6 +168,6 @@
 @media print {
   .duo-panels { display: block; }
   .duo-profile { break-inside: avoid; }
-  .duo-scene, .duo-seam, .duo-back { display: none; }
+  .duo-scene, .duo-seam { display: none; }
   .duo-profile-content { min-height: 0; }
 }

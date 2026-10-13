@@ -4,6 +4,7 @@ import { viteBundler } from '@vuepress/bundler-vite'
 import { defineUserConfig } from 'vuepress'
 import { plumeTheme } from 'vuepress-theme-plume'
 import { contentIndexPlugin } from './plugins/contentIndex'
+import { contentPageClasses, getContentSection } from './shared/contentTheme'
 
 /**
  * DOCS_BASE lets GitHub Pages provide a repository-aware base path.
@@ -17,8 +18,13 @@ export default defineUserConfig({
   lang: 'zh-CN',
   title: '首页',
   plugins: [contentIndexPlugin()],
+  extendsPage(page) {
+    const section = getContentSection(page.filePathRelative)
+    if (section) page.frontmatter.pageClass = contentPageClasses(section, page.frontmatter.pageClass)
+  },
   alias: {
     '@theme/VPDocBreadcrumb.vue': fileURLToPath(new URL('./components/ProjectBreadcrumb.vue', import.meta.url)),
+    '@theme/Nav/VPNavBarSearch.vue': fileURLToPath(new URL('./components/DocumentSearch.vue', import.meta.url)),
   },
   head: [
     ['script', { id: 'page-appearance' }, `

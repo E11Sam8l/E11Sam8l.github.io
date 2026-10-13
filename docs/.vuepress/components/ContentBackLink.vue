@@ -6,7 +6,7 @@ import VPLink from 'vuepress-theme-plume/components/VPLink.vue'
 import type { ContentSection } from '../shared/content'
 
 const { placement = 'sidebar' } = defineProps<{
-  placement?: 'sidebar' | 'content' | 'listing'
+  placement?: 'sidebar' | 'content'
 }>()
 const { page } = useData()
 const sectionTitles: Record<ContentSection, string> = {
@@ -17,7 +17,7 @@ const backLink = computed(() => {
   const file = page.value.filePathRelative?.replace(/\\/g, '/') ?? ''
   const match = /^(blog|knowledge|projects)\/(.+)$/.exec(file)
   if (!match) return undefined
-  if (/^(README|index)\.md$/i.test(match[2])) return { path: '/', text: '返回首页' }
+  if (/^(README|index)\.md$/i.test(match[2])) return undefined
   const section = match[1] as ContentSection
   const path = `/${section}/`
   const title = resolveRoute(path).meta.title || sectionTitles[section]
@@ -37,7 +37,6 @@ const backLink = computed(() => {
 <style scoped>
 .content-back--sidebar { margin-bottom: 12px; }
 .content-back--content { margin-bottom: 20px; }
-.content-back--listing { margin-bottom: 20px; }
 .content-back-link {
   display: inline-flex;
   align-items: center;

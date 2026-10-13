@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { usePageFrontmatter } from 'vuepress/client'
-import VPLink from 'vuepress-theme-plume/components/VPLink.vue'
 import '../styles/about.css'
 
 interface Experience {
@@ -38,14 +37,6 @@ function avatarFor(profile: Profile): string | undefined {
 
 <template>
   <main class="duo-about" aria-labelledby="duo-about-title">
-    <header class="duo-masthead">
-      <VPLink href="/" class="duo-back" no-icon>
-        <span class="vpi-arrow-left" aria-hidden="true" /> 返回首页
-      </VPLink>
-      <h1 id="duo-about-title">关于我们<span>OUR STORIES</span></h1>
-      <span class="duo-masthead-note">两个人 · 同一片日落</span>
-    </header>
-
     <div class="duo-panels">
       <article
         v-for="(profile, index) in profiles"
@@ -113,5 +104,9 @@ function avatarFor(profile: Profile): string | undefined {
       </article>
       <div class="duo-seam" aria-hidden="true"><span>&amp;</span></div>
     </div>
+    <footer class="duo-footer">
+      <h1 id="duo-about-title">关于我们<span>OUR STORIES</span></h1>
+      <span class="duo-footer-note">两个人 · 同一片日落</span>
+    </footer>
   </main>
 </template>

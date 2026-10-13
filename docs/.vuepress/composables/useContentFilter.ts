@@ -1,14 +1,12 @@
-import { computed, inject, provide, reactive, shallowRef, toValue, watch } from 'vue'
+import { computed, inject, provide, shallowRef, toValue, watch } from 'vue'
 import type { InjectionKey, MaybeRefOrGetter } from 'vue'
 import { contentIndex } from '@temp/content-index'
 import type { ContentItem, ContentSection } from '../shared/content'
-export interface ContentFilterState {
-  selected: string[]
-  page: number
-  open: boolean
-}
-type FilterStore = Record<ContentSection, ContentFilterState>
-const filterStoreKey: InjectionKey<FilterStore> = Symbol('content-filters')
+import { createContentFilterStore, filterContent } from '../shared/contentFilter'
+import type { ContentFilterStore } from '../shared/contentFilter'
+export { createContentFilterStore, filterContent } from '../shared/contentFilter'
+export type { ContentFilterState } from '../shared/contentFilter'
+const filterStoreKey: InjectionKey<ContentFilterStore> = Symbol('content-filters')
 const indexedItems = shallowRef<readonly ContentItem[]>(contentIndex)
 
 // Only immutable content data is shared at module scope. Selection belongs to each app.
@@ -18,18 +16,8 @@ if (import.meta.hot) {
   })
 }
 
-export function createContentFilterStore(): FilterStore {
-  const create = (): ContentFilterState => ({ selected: [], page: 1, open: false })
-  return reactive({ blog: create(), knowledge: create(), projects: create() })
-}
-
 export function setupContentFilters() {
   provide(filterStoreKey, createContentFilterStore())
-}
-
-export function filterContent(items: readonly ContentItem[], selected: readonly string[]): ContentItem[] {
-  const selection = new Set(selected)
-  return items.filter(item => !selection.size || item.tags.some(tag => selection.has(tag)))
 }
 
 export function useContentFilter(
@@ -74,14 +62,9 @@ export function useContentFilter(
       ? current.selected.filter(value => value !== tag)
       : [...current.selected, tag]
     current.page = 1
-    current.open = true
   }
   function clear() {
     state.value.selected = []
-    state.value.page = 1
-  }
-  function removeTag(tag: string) {
-    state.value.selected = state.value.selected.filter(value => value !== tag)
     state.value.page = 1
   }
   function changePage(value: number) {
@@ -99,5 +82,5 @@ export function useContentFilter(
     state.value.page = page.value
   }, { immediate: true })
 
-  return { state, tags, filtered, visibleItems, page, totalPages, pageRange, selectTag, clear, removeTag, changePage }
+  return { state, tags, items, filtered, visibleItems, page, totalPages, pageRange, selectTag, clear, changePage }
 }
