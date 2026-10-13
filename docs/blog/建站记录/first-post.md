@@ -1,7 +1,6 @@
 ---
 title: 把 Markdown 变成可发布的网站
 createTime: 2026/10/08 12:00:00
-permalink: /blog/first-post/
 tags:
   - VuePress
   - GitHub Pages

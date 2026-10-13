@@ -1,0 +1,10 @@
+/* 长标题完整换行，单行条目的总高度仍为 32px，保持主题高亮标记对齐。 */
+.vp-doc-aside-outline a.outline-link,
+.vp-local-nav-outline-dropdown a.outline-link {
+  padding: 4px 0;
+  overflow: visible;
+  line-height: 24px;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

@@ -1,6 +1,10 @@
 ---
 title: VuePress 知识库项目
 permalink: /projects/vuepress-knowledge-base/
+description: 基于 VuePress 和 Plume 的个人知识库与博客站点。
+tags:
+  - VuePress
+  - 知识库
 ---
 
 # VuePress 知识库项目
@@ -12,3 +16,8 @@ permalink: /projects/vuepress-knowledge-base/
 - 源码：当前 GitHub 仓库
 - 发布：GitHub Pages
 - 内容编辑：Obsidian 或普通编辑器
+
+## 项目文档
+
+- [本地启动说明](./setup.html)
+- [部署检查清单](./deployment.html)

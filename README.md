@@ -1,162 +1,178 @@
-# 文件夹代表知识领域，Markdown代表具体知识点。
+# 新增项目文档说明
 
-# 个人知识库与博客 V1
+本仓库使用 VuePress 和 Plume 展示项目文档。**三个栏目下的每个一级文件夹就是一个独立项目，文件夹中的 Markdown 文件是这个项目的概览、章节和资料。**
 
-这是一个基于 VuePress 2、vuepress-theme-plume、Markdown、pnpm 和 GitHub Pages 的静态个人知识库与博客。
+新增项目时，复制根目录的 [project-template](./project-template/README.md) 模板，填写内容即可。站点会自动生成项目卡片、项目侧栏、上下篇导航和面包屑。
 
-## 目录结构
+## 1. 选择项目所属栏目
 
-```text
-docs/       这里面放的就是我们要写的内容
-├── README.md                         # 首页
-├── knowledge/                         # doc collection：知识库
-│   ├── README.md
-│   └── markdown/
-├── blog/                              # post collection：博客
-├── projects/                          # 项目展示入口
-├── about/                             # 关于页面
-├── assets/                            # 图片、附件等静态资源
-└── .vuepress/
-    ├── config.ts                      # VuePress 构建与 base 配置
-    ├── plume.config.ts                 # Plume 导航、集合与文章大纲
-    ├── collections.ts                 # 知识库和博客集合
-    └── navbar.ts                      # 顶部导航
+| 栏目 | 保存位置 | 适合的内容 |
+| --- | --- | --- |
+| 博客 | `docs/blog/` | 建站记录、学习日志、系列文章 |
+| 知识库 | `docs/knowledge/` | 专题笔记、课程学习、知识体系 |
+| 项目 | `docs/projects/` | 项目介绍、需求、实现和验证记录 |
 
-legacy/                                # 原 Demo 与旧配置归档
-├── original-README.md                 # 初始化前 README 备份
-├── original-static.yml                # 初始化前 Pages 工作流备份
-└── html-css-JavaScript-demo/
-.github/workflows/deploy.yml           # GitHub Pages 自动部署
-package.json                            # 依赖和脚本
-pnpm-lock.yaml                          # 锁定依赖版本
-pnpm-workspace.yaml                     # pnpm 发布冷却策略例外
+例如，`docs/knowledge/运动控制/` 是一个知识项目，里面可以包含多篇 Markdown 和任意子目录。子目录属于这个项目，栏目根目录的 README 用于展示项目列表。
+
+## 2. 复制项目模板
+
+在仓库根目录执行下面的命令。把 `my-new-project` 换成一个尚未使用的目录名；中文目录名也可以使用。
+
+```bash
+# 新增一个知识项目
+cp -r project-template docs/knowledge/my-new-project
 ```
 
-`pnpm-workspace.yaml` 仅用于声明当前 Plume rc 依赖的发布冷却策略例外，不代表项目包含多个工作区。
+如果项目属于博客或实践项目，将目标路径分别改为 `docs/blog/my-new-project` 或 `docs/projects/my-new-project`。
 
-## 环境要求
+复制后的目录结构：
 
-- Node.js `22.18+`（VuePress 2 rc31 与主题要求）
-- pnpm `11+`
+```text
+docs/knowledge/my-new-project/
+├── README.md                 # 项目概览，定义卡片标题、简介和标签
+├── 1.项目背景.md             # 第一篇章节
+├── 2.实践记录.md             # 第二篇章节
+├── 3.参考资料/               # 项目内部的资料目录
+│   ├── README.md             # 资料目录介绍
+│   └── 1.阅读笔记.md         # 更深层的章节
+└── assets/                   # 图片和附件，按需添加
+```
 
-## 安装依赖       本地开发时 要先要先安装依赖
+根目录的 `project-template/` 是模板存放位置；复制到 `docs/` 的相应栏目后，才会成为站点内容。
 
-在仓库根目录执行：
+## 3. 填写项目概览
+
+编辑新项目的 `README.md`，先替换文件开头的项目信息：
+
+```yaml
+---
+title: 运动控制学习项目
+description: 从运动学基础到轨迹规划的学习与实验记录。
+tags:
+  - 机器人学
+  - 运动控制
+---
+```
+
+然后修改正文中的一级标题、项目简介、目标、章节链接和进度。
+
+| 字段 | 用途 | 填写方式 |
+| --- | --- | --- |
+| `title` | 项目卡片、概览标题和导航名称 | 填写项目名称，并同步修改正文一级标题 |
+| `description` | 项目卡片简介 | 用一两句话概括项目内容 |
+| `tags` | 所属栏目的项目标签筛选 | 每行一个标签，由项目 README 统一维护 |
+| `createTime` | 可选的创建时间和卡片排序依据 | 如 `"2026/10/13 18:00:00"`，填写实际时间 |
+| `sticky` | 可选的卡片置顶优先级 | 正整数，数字越大越靠前 |
+| `draft` | 可选的项目草稿标记 | `true` 会隐藏项目卡片，正文仍可直接访问 |
+
+每个项目只显示一张卡片。卡片的文档数量包含项目 README 和嵌套目录中的 Markdown；图片与附件不计入数量。内部章节自己的标签不会影响项目筛选。
+
+栏目页面左侧常驻显示当前已有的标签和各标签的项目数量，点击即可筛选，支持多选并匹配任一所选标签。再次点击已选标签可以取消，点击“全部项目”或“清空”可重置筛选。窄屏下标签栏排列在列表上方，仍可直接点击。项目卡片中的标签仅展示信息，筛选操作统一在标签栏完成。
+
+三个栏目与项目正文自动使用日落、霓虹和棕榈元素组成的视觉风格，亮色与暗色阅读模式均可使用。新项目会自动继承样式；视觉配置集中在 `docs/.vuepress/styles/vice-content.css`。
+
+模板提供了创建时间和置顶字段的注释示例，使用时去掉行首的 `#` 并填写实际值即可。模板中其他提示文字也可以直接替换或删除。
+
+## 4. 编写章节和嵌套资料
+
+每篇章节可以使用下面的结构：
+
+```md
+---
+title: 运动学基础
+---
+
+# 运动学基础
+
+## 学习目标
+
+说明本章要解决的问题。
+
+## 主要内容
+
+编写正文、代码或图片。
+
+### 一个具体例子
+
+补充例子、实验或结果。
+
+[返回项目概览](./README.md)
+```
+
+- 需要控制阅读顺序时，使用 `1.基础.md`、`2.实践.md` 这样的数字前缀。页面显示名称由 `title` 或一级标题决定。
+- 用 `##` 和 `###` 组织正文，它们会进入“此页内容”大纲；长标题会自动换行。
+- 子目录也可以放一个 README 介绍该组资料，再添加其他 Markdown 文件。
+- 添加、删除或重命名章节后，同步维护项目 README 和其他正文中的手写链接。
+
+左侧侧栏会自动发现项目内的章节，并逐级缩进；上下篇只在当前项目内切换。项目侧栏顶部提供“返回所属栏目列表”按钮，窄屏阅读或收起侧栏时在正文顶部显示。返回列表时会保留本次浏览已选择的项目筛选标签。面包屑会显示“首页 → 栏目 → 项目 → 内部目录 → 当前文档”。
+
+## 5. 添加链接、图片和附件
+
+模板使用指向真实 Markdown 文件的相对链接，VuePress 发布时会将它们转换为页面地址：
+
+```md
+[同目录章节](./1.项目背景.md)
+[进入资料目录](./3.参考资料/README.md)
+[从子目录返回项目](../README.md)
+```
+
+将图片和附件放到项目的 `assets/` 目录。添加文件后，再按当前文档所在位置引用：
+
+```md
+<!-- 项目根目录中的章节 -->
+![示意图](./assets/example.png)
+[下载附件](./assets/example.pdf)
+
+<!-- 3.参考资料/ 中的章节 -->
+![示意图](../assets/example.png)
+```
+
+上面的图片和附件名称是写法示例，实际使用时替换为已添加的文件名。文档也可以在 Obsidian 中编辑，使用 `docs/` 作为仓库目录即可。
+
+## 6. 本地预览和检查
+
+建议使用 Node.js 24 和 pnpm 11；项目最低要求为 Node.js 22.18。
+
+首次使用时，在仓库根目录安装依赖并启动：
 
 ```bash
 pnpm install
-```
-
-如果你使用 npm 或其他包管理器，请优先保持团队统一使用 pnpm，并保留 `pnpm-lock.yaml`。
-
-## 本地启动
-
-```bash
 pnpm dev
 ```
 
-打开终端提示的本地地址（通常是 <http://localhost:8080>）。修改 `docs/` 下的 Markdown 后，页面会自动更新。
+打开终端提示的地址。新增项目或修改项目名称时，开发服务会自动重启；按终端提示刷新页面。修改普通章节时，页面会直接更新。
 
-## 生产构建
+开发预览与生产构建使用独立的临时目录和缓存，运行 `pnpm build` 不会覆盖正在预览的搜索索引和页面模块。如果升级依赖或重启后搜索异常，先停止原开发服务，再运行 `pnpm dev:clean`，并刷新浏览器页面。
+
+检查项目卡片的标题、简介、标签和文档数量，点击卡片后检查侧栏、面包屑、章节链接及图片是否正常。
+
+发布前运行：
 
 ```bash
+pnpm test
 pnpm build
 ```
 
-构建产物位于 `docs/.vuepress/dist/`。该目录是临时产物，已写入 `.gitignore`，不需要提交。
+## 7. 提交并发布
 
-## 主要配置文件
-
-- `package.json`：声明 VuePress、Plume 依赖以及 `dev`、`build` 脚本。
-- `docs/.vuepress/config.ts`：设置站点语言、标题、构建器和可迁移的 `DOCS_BASE` 路径。
-- `docs/.vuepress/plume.config.ts`：集中加载顶部导航、内容集合和文章标题大纲设置。
-- `docs/.vuepress/collections.ts`：把 `knowledge/` 配置为 doc collection，把 `blog/` 配置为 post collection。
-- `docs/.vuepress/navbar.ts`：维护顶部导航链接；新增知识库主题不需要修改它。
-- `.github/workflows/deploy.yml`：在合并到 `main` 后安装依赖、构建并发布 `docs/.vuepress/dist/`。
-- `.gitignore`：排除依赖、构建缓存和 Obsidian 本地工作区状态。
-
-## 如何新增知识库目录和笔记
-
-1. 在 `docs/knowledge/` 下创建任意主题目录，例如 `docs/knowledge/摄影/`。
-2. 在目录中添加 `README.md` 作为主题入口，也可以继续创建多层子目录。
-3. 添加 `.md` 文件并使用标准 Markdown 标题组织内容。
-4. 运行 `pnpm dev` 检查页面、左侧导航、右侧标题大纲和站内链接。
-5. `sidebar: 'auto'` 会根据目录自动发现文章，不需要每次修改配置文件。
-
-文件名建议使用小写英文、数字和短横线；中文文件名也可以工作，但统一命名有助于跨平台协作。
-
-## 如何添加博客文章
-
-在 `docs/blog/` 下创建一个 `.md` 文件；建议用子目录表示分类，例如 `docs/blog/项目记录/新文章.md`。可以写基本 frontmatter：
-
-```md
----
-title: 一篇新文章
-createTime: 2026/10/08 12:00:00
-tags:
-  - 标签名称
----
-
-# 一篇新文章
-
-正文从这里开始。
-```
-
-博客集合会生成文章列表，并提供分类、标签和归档入口；文章所在的子目录会自动成为分类，不需要额外修改集合配置。
-
-## 图片与附件
-
-统一把站点资源放在 `docs/assets/` 或文章目录下的 `assets/` 中。Markdown 使用相对当前文件的路径；例如 `docs/knowledge/markdown/first-note.md` 引用公共资源时写成：
-
-```md
-![示例图片](../../assets/example.svg)
-```
-
-这种写法可以同时被 Obsidian 和 VuePress 识别。
-
-较大的媒体文件建议放到专门的外部对象存储或图床，仓库只保留必要的小型资源。
-
-## 使用 Obsidian
-
-1. 在 Obsidian 中选择“打开文件夹作为仓库”，选择本项目的 `docs/` 目录。
-2. 直接编辑 `knowledge/`、`blog/`、`projects/` 和 `about/` 中的 Markdown。
-3. 图片可以放进 `assets/`；尽量使用相对清晰、稳定的文件名。
-4. `.obsidian/` 工作区状态和插件目录已加入 `.gitignore`，不会进入仓库；Markdown 和资源文件仍会被 Git 跟踪。
-5. 未来安装 Obsidian Git 插件时，提交范围仍建议只包含内容和配置变更。
-
-V1 优先保证标准 Markdown 可发布；Obsidian 双链、嵌入等专有语法暂不作为发布前提。
-
-## 提交与发布
+确认预览和构建通过后，提交新增的项目目录。例如：
 
 ```bash
-git status
-git add -A
-git commit -m "build: initialize VuePress knowledge base"
-git push -u origin HEAD
+git add docs/knowledge/my-new-project
+git commit -m "docs: add new project documentation"
 ```
 
-推送当前功能分支后，在 GitHub 创建 Pull Request。维护者审核并合并到 `main` 后，GitHub Actions 会安装依赖、运行 `pnpm build`，再把 `docs/.vuepress/dist/` 发布到 GitHub Pages。
+将内容推送到工作分支并合并到 `main` 后，GitHub Actions 会运行测试、构建并发布到 GitHub Pages。构建产物位于 `docs/.vuepress/dist/`，已被 Git 忽略。
 
-## 检查 GitHub Actions
+## 常见情况
 
-在仓库的 **Actions** 页面打开最新的 `Deploy VuePress site to GitHub Pages` 运行记录：
+| 情况 | 处理方式 |
+| --- | --- |
+| 新项目没有显示 | 确认目录位于三个栏目之一的一级目录下，并包含 Markdown；检查 README 是否设置了隐藏项目的字段 |
+| 没有项目 README | 仍会识别目录，使用文件夹名并打开第一篇文档；推荐补齐 README 来维护简介和标签 |
+| 新章节没有单独的项目卡片 | 章节归属于它所在的一级项目目录，从项目侧栏阅读 |
+| 新增后侧栏未更新 | 查看开发服务是否已完成自动重启，再刷新页面 |
+| 章节顺序不符合预期 | 给文件名和子目录添加 `1.`、`2.` 等数字前缀 |
+| 链接或图片打不开 | 检查相对路径、文件名大小写，并确认重命名后已同步修改引用 |
 
-- `Build` 成功表示依赖安装和生产构建通过。
-- `Deploy to GitHub Pages` 成功后，打开仓库 **Settings → Pages** 中显示的站点地址。
-- 失败时先查看失败步骤的日志，常见原因是锁文件未同步、Node/pnpm 版本不一致或 Pages 没有选择 GitHub Actions 作为来源。
-
-工作流已经声明了 Pages 所需的 `contents: read`、`pages: write` 和 `id-token: write` 权限，但不会修改仓库设置或权限。首次使用时，仓库维护者需要在 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**。
-
-## 迁移到其他 GitHub 账号或仓库
-
-- 修改 Git remote：`git remote set-url origin https://github.com/新账号/新仓库.git`。
-- 如果仍是用户站点（`新账号.github.io`），通常保持站点根路径 `/`。
-- 如果改成项目站点，工作流会把 GitHub Pages 的 `base_path` 通过 `DOCS_BASE` 传给构建，不需要把账号名写进源码。
-- 按需修改 `docs/.vuepress/config.ts` 的站点标题和描述、`docs/about/README.md` 的个人信息，以及 `docs/.vuepress/navbar.ts` 的公开链接。
-- 不要把 Token、密钥或个人访问凭据写入仓库；使用 GitHub Actions 自带的 `GITHUB_TOKEN` 即可完成 Pages 部署。
-
-## 当前 V1 范围
-
-已包含首页、知识库 doc collection、博客 post collection、自动侧边栏、文章标题大纲、本地搜索、代码高亮、项目入口、Obsidian 忽略规则和 Pages 工作流。复杂 UI、评论、知识图谱、AI 问答与后端功能留待后续版本。
-
-
+日常新增内容按照以上步骤进行即可，项目会自动识别目录并生成导航。

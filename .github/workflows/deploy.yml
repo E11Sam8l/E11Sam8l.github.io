@@ -23,6 +23,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Plume 的贡献者和更新日志需要文章的完整 Git 历史。
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -38,6 +41,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Test project content configuration
+        run: pnpm test
 
       - name: Setup GitHub Pages
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

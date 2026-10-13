@@ -25,7 +25,7 @@ export function greet(name: string): string {
 
 资源可以和内容分开放在 `docs/assets/`，从当前 Markdown 文件使用相对路径引用：
 
-![本地资源路径示例](../../assets/example.svg)
+![本地资源路径示例](./example.svg)
 
 ## 继续阅读
 

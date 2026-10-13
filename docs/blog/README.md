@@ -1,9 +1,9 @@
 ---
 title: 博客
+description: 按专题阅读学习日志与实践记录，点击下方浏览完整章节。
+pageLayout: ContentListPage
+contentSection: blog
+sidebar: false
+aside: false
+outline: false
 ---
-
-# 博客
-
-这里是博客文章集合入口。文章支持分类、标签和归档；新增文章时，直接在 `docs/blog/` 下创建 Markdown 文件即可。
-
-示例文章：[把 Markdown 变成可发布的网站](/blog/first-post/)
