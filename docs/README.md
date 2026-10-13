@@ -46,7 +46,9 @@ config:
 <script setup>
 import { withBase } from 'vuepress/client'
 import { useHomeScroll } from './.vuepress/composables/useHomeScroll'
+import { useHomePageTransition } from './.vuepress/composables/usePageTransition'
 import './.vuepress/styles/home.css'
 
 useHomeScroll()
+useHomePageTransition()
 </script>

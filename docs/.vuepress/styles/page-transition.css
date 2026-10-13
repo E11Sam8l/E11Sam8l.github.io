@@ -1,0 +1,45 @@
+/* The homepage always uses dark mode; reading pages retain Plume's theme switch. */
+html.vice-home-appearance .vp-navbar-appearance,
+html.vice-home-appearance .vp-navbar-extra .group.appearance,
+html.vice-home-appearance .vp-nav-screen-appearance {
+  display: none;
+}
+
+/* Only the homepage card reveal overrides the browser's default crossfade. */
+html.vice-page-transition::view-transition-group(root) {
+  animation: none;
+}
+
+html.vice-page-transition::view-transition-old(root),
+html.vice-page-transition::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.vice-page-transition::view-transition-old(root) {
+  z-index: 1;
+}
+
+html.vice-page-transition::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Capture the fully visible target page rather than Plume's entrance animation. */
+html.vice-page-transition .fade-slide-y-enter-active,
+html.vice-page-transition .fade-slide-y-leave-active,
+html.vice-page-transition .fade-slide-x-enter-active,
+html.vice-page-transition .fade-slide-x-leave-active {
+  transition: none !important;
+}
+
+html.vice-page-transition .fade-slide-y-enter-from,
+html.vice-page-transition .fade-slide-y-leave-to,
+html.vice-page-transition .fade-slide-x-enter-from,
+html.vice-page-transition .fade-slide-x-leave-to {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html.vice-page-transition {
+  --vp-t-color: 0s;
+}
