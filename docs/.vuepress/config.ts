@@ -14,6 +14,23 @@ export default defineUserConfig({
   base,
   lang: 'zh-CN',
   title: '首页',
+  head: [
+    ['script', { id: 'page-appearance' }, `
+      (() => {
+        // Keep this key aligned with usePageTransition.ts. Run before styles paint.
+        let readingTheme = 'light'
+        try {
+          if (localStorage.getItem('vice-page-appearance') === 'dark') readingTheme = 'dark'
+        } catch {}
+        const base = ${JSON.stringify(base)}
+        const path = location.pathname.startsWith(base)
+          ? '/' + location.pathname.slice(base.length) : location.pathname
+        const home = path === '/' || path === '/index.html'
+        document.documentElement.dataset.theme = home ? 'dark' : readingTheme
+        document.documentElement.classList.toggle('vice-home-appearance', home)
+      })()
+    `],
+  ],
   bundler: viteBundler({
     // Vue 3.5 resolves imported types in theme SFCs through this Node fs adapter.
     vuePluginOptions: {
