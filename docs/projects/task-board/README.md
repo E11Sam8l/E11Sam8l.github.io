@@ -15,3 +15,4 @@ tags:
 
 - [需求说明](./requirements.html)
 - [实现思路](./implementation.html)
+- [验证记录](./verification/)

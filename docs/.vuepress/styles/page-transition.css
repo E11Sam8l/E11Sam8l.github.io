@@ -5,7 +5,7 @@ html.vice-home-appearance .vp-nav-screen-appearance {
   display: none;
 }
 
-/* Only the homepage card reveal overrides the browser's default crossfade. */
+/* Only homepage-to-section links use the circular reveal. */
 html.vice-page-transition::view-transition-group(root) {
   animation: none;
 }
@@ -42,4 +42,9 @@ html.vice-page-transition .fade-slide-x-leave-to {
 
 html.vice-page-transition {
   --vp-t-color: 0s;
+}
+
+/* The mobile navigation closes on route change; keep its exit layer out of the snapshot. */
+html.vice-page-transition .vp-nav-screen {
+  display: none;
 }

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import VPLink from 'vuepress-theme-plume/components/VPLink.vue'
 import VPPagination from 'vuepress-theme-plume/components/Posts/VPPagination.vue'
 import { useContentFilter } from '../composables/useContentFilter'
-import type { ContentSection } from '../composables/useContentFilter'
+import type { ContentSection } from '../shared/content'
 
 const props = defineProps<{ section: ContentSection }>()
 const { state, tags, filtered, visibleItems, page, totalPages, pageRange, selectTag, clear, removeTag, changePage }
@@ -18,7 +18,7 @@ const panelId = computed(() => `content-tags-${props.section}`)
         <span class="vpi-tag" aria-hidden="true" /> 标签 <span class="tag-total">{{ tags.length }}</span>
         <span aria-hidden="true">{{ state.open ? '▴' : '▾' }}</span>
       </button>
-      <span class="result-count" role="status" aria-live="polite">{{ state.selected.length ? '筛选结果' : '全部内容' }} · {{ filtered.length }} 项</span>
+      <span class="result-count" role="status" aria-live="polite">{{ state.selected.length ? '筛选结果' : '全部项目' }} · {{ filtered.length }} 个项目</span>
       <button v-if="state.selected.length" class="clear" type="button" @click="clear">清空筛选</button>
     </div>
 
@@ -45,6 +45,7 @@ const panelId = computed(() => `content-tags-${props.section}`)
               <button v-for="tag in item.tags" :key="tag" type="button" :aria-pressed="state.selected.includes(tag)" @click="selectTag(tag)">{{ tag }}</button>
             </div>
             <time v-if="item.createTime"><span class="vpi-clock" aria-hidden="true" /> {{ item.createTime.split(' ')[0].replaceAll('/', '-') }}</time>
+            <span class="document-count"><span class="vpi-books" aria-hidden="true" /> {{ item.documentCount }} 篇文档</span>
           </div>
           <p v-if="item.description" class="description">{{ item.description }}</p>
         </article>
@@ -82,7 +83,8 @@ button { font: inherit; cursor: pointer; }
 .card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
 .card-tags { align-items: center; gap: 6px; }
 .card-tags button { padding: 3px 5px; font-size: 12px; line-height: 1; color: var(--vp-c-brand-1); background: var(--vp-c-brand-soft); border: 0; border-radius: 3px; }
-time { display: inline-flex; align-items: center; gap: 6px; }
+time, .document-count { display: inline-flex; align-items: center; gap: 6px; }
+.document-count { color: var(--vp-c-text-2); font-size: 14px; }
 .empty-state { padding: 36px 20px; text-align: center; background: var(--vp-c-bg-soft); border-radius: 12px; }
 button:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
 .content-browser :deep(.vp-pagination) { margin: 16px 0 0; border-radius: 12px; }

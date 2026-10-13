@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { viteBundler } from '@vuepress/bundler-vite'
 import { defineUserConfig } from 'vuepress'
 import { plumeTheme } from 'vuepress-theme-plume'
@@ -16,9 +17,8 @@ export default defineUserConfig({
   lang: 'zh-CN',
   title: '首页',
   plugins: [contentIndexPlugin()],
-  extendsPage(page) {
-    // Hide Plume's circular reading-progress / back-to-top control on subpages.
-    if (page.frontmatter.pageLayout !== 'home') page.frontmatter.backToTop = false
+  alias: {
+    '@theme/VPDocBreadcrumb.vue': fileURLToPath(new URL('./components/ProjectBreadcrumb.vue', import.meta.url)),
   },
   head: [
     ['script', { id: 'page-appearance' }, `
@@ -52,9 +52,17 @@ export default defineUserConfig({
     // Keep source Markdown unchanged while plume.config.ts reloads on restart.
     autoFrontmatter: false,
     search: { provider: 'local' },
-    plugins: { git: false },
-    contributors: false,
-    editLink: false,
-    lastUpdated: false,
+    docsRepo: 'https://github.com/E11Sam8l/E11Sam8l.github.io',
+    docsBranch: 'main',
+    docsDir: 'docs',
+    changelog: { maxCount: 10 },
+    contributors: { mode: 'block' },
+    // 页面操作菜单依赖生产构建导出的 Markdown。
+    llmstxt: true,
+    codeHighlighter: {
+      lineNumbers: 10,
+      renderIndentGuides: true,
+      colorizedBrackets: true,
+    },
   }),
 })

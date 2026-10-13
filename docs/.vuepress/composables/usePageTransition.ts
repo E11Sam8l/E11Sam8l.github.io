@@ -1,11 +1,9 @@
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter, withBase } from 'vuepress/client'
 import { darkModeSymbol } from 'vuepress-theme-plume/client'
+import { isHomePath as isHome, resolveHomeTransitionTarget } from '../shared/homeTransition'
 
 const appearanceKey = 'vice-page-appearance'
-const homePaths = new Set(['/', '/index.html'])
-const transitionPaths = new Set(['/knowledge/', '/blog/', '/projects/', '/about/'])
-const isHome = (path: string) => homePaths.has(path)
 let activeTransition: { token: symbol; cancel: () => void } | null = null
 
 /** Keep the reading preference separate from Plume's forced homepage theme. */
@@ -111,17 +109,20 @@ export function setupPageTransition() {
   })
 }
 
-/** Reveal the destination from the selected homepage card or about button's center. */
+/** Reveal the destination from a homepage card, about button or navbar link. */
 export function useHomePageTransition() {
   const router = useRouter()
-  let home: HTMLElement | null = null
+  const route = useRoute()
   let navigating = false
 
   const onClick = async (event: MouseEvent) => {
+    if (!isHome(route.path) || event.defaultPrevented) return
     const link = event.target instanceof Element
-      ? event.target.closest<HTMLAnchorElement>('a.vp-home-feature, a.vice-about-link')
+      ? event.target.closest<HTMLAnchorElement>(
+          'a.vp-home-feature, a.vice-about-link, .vp-navbar-menu a.navbar-menu-link, .vp-nav-screen-menu a.vp-link',
+        )
       : null
-    if (!link || !home?.contains(link)) return
+    if (!link) return
 
     // Preserve native new-tab behavior instead of Plume's ordinary click handler.
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
@@ -130,11 +131,8 @@ export function useHomePageTransition() {
       return
     }
 
-    const url = new URL(link.href, window.location.href)
-    const base = withBase('/')
-    if (url.origin !== window.location.origin || !url.pathname.startsWith(base)) return
-    const path = `/${url.pathname.slice(base.length)}`
-    if (!transitionPaths.has(path)) return
+    const destination = resolveHomeTransitionTarget(route.path, link.href, window.location.href, withBase('/'))
+    if (!destination) return
 
     event.preventDefault()
     event.stopImmediatePropagation()
@@ -162,7 +160,7 @@ export function useHomePageTransition() {
     previousTransition?.cancel()
     const navigate = async () => {
       navigationStarted = true
-      const failure = await router.push(`${path}${url.search}${url.hash}`)
+      const failure = await router.push(destination)
       if (failure) throw failure
       await nextTick()
       await nextTick()
@@ -219,12 +217,11 @@ export function useHomePageTransition() {
   }
 
   onMounted(() => {
-    home = document.querySelector<HTMLElement>('.vice-home-title')?.closest<HTMLElement>('.vp-home') ?? null
-    home?.addEventListener('click', onClick, { capture: true })
+    // Navbar links live outside the homepage content, so capture at the document.
+    document.addEventListener('click', onClick, { capture: true })
   })
   onUnmounted(() => {
-    home?.removeEventListener('click', onClick, { capture: true })
+    document.removeEventListener('click', onClick, { capture: true })
     // The transition intentionally outlives the homepage component it replaces.
-    home = null
   })
 }

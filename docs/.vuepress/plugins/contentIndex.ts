@@ -1,28 +1,47 @@
-import type { App, Plugin } from 'vuepress/core'
-import type { ContentItem, ContentSection } from '../composables/useContentFilter'
+import type { App, Page, Plugin } from 'vuepress/core'
+import { discoverProjectCollections } from '../collections.ts'
+import type { ContentItem, ContentSection } from '../shared/content'
 
 export function collectContentItems(app: Pick<App, 'pages'>): ContentItem[] {
   const sections = new Set(['blog', 'knowledge', 'projects'])
-  return app.pages.flatMap((page): ContentItem[] => {
+  const projects = new Map<string, { section: ContentSection; name: string; pages: Page[] }>()
+  for (const page of app.pages) {
     const file = page.filePathRelative?.replace(/\\/g, '/') ?? ''
     const parts = file.split('/')
     const section = parts[0] as ContentSection
-    // One first-level folder is one project. Only its README defines the card.
-    if (!sections.has(section) || parts.length !== 3 || !/^README\.md$/i.test(parts[2])
-      || page.frontmatter.draft === true || page.frontmatter.article === false
-      || page.frontmatter.postList === false) return []
-    const rawTags = page.frontmatter.tags
+    if (!sections.has(section) || parts.length < 3 || !/\.md$/i.test(file)
+      || parts.slice(1).some(part => part.startsWith('.'))) continue
+    const key = `${section}/${parts[1]}`
+    const project = projects.get(key) ?? { section, name: parts[1], pages: [] }
+    project.pages.push(page)
+    projects.set(key, project)
+  }
+  return [...projects.values()].flatMap(({ section, name, pages }): ContentItem[] => {
+    const overview = pages.find(page => {
+      const parts = page.filePathRelative!.replace(/\\/g, '/').split('/')
+      return parts.length === 3 && /^README\.md$/i.test(parts[2])
+    })
+    // README controls the whole project; a folder without one opens its first document.
+    const visiblePages = pages.filter(page => page.frontmatter.draft !== true
+      && page.frontmatter.article !== false && page.frontmatter.postList !== false)
+    if (overview && !visiblePages.includes(overview)) return []
+    const page = overview ?? visiblePages.sort((a, b) => a.filePathRelative!
+      .localeCompare(b.filePathRelative!, 'zh-CN', { numeric: true }))[0]
+    if (!page) return []
+    const metadata = overview?.frontmatter ?? {}
+    const rawTags = metadata.tags
     const tags = [...new Set((Array.isArray(rawTags) ? rawTags : [rawTags])
       .filter((tag): tag is string => typeof tag === 'string')
       .map(tag => tag.trim()).filter(Boolean))]
-    const sticky = page.frontmatter.sticky
+    const sticky = metadata.sticky
     return [{
-      section, title: page.title || parts[1], path: page.path,
+      section, title: overview ? page.title || name : name, path: page.path,
       tags,
-      description: typeof page.frontmatter.description === 'string' ? page.frontmatter.description : '',
-      createTime: typeof page.frontmatter.createTime === 'string' ? page.frontmatter.createTime : '',
+      description: typeof metadata.description === 'string' ? metadata.description : '',
+      createTime: typeof metadata.createTime === 'string' ? metadata.createTime : '',
       sticky: sticky === true ? Number.MAX_SAFE_INTEGER
         : typeof sticky === 'number' && Number.isFinite(sticky) && sticky > 0 ? sticky : 0,
+      documentCount: visiblePages.length,
     }]
   }).sort((a, b) => b.sticky - a.sticky
     || (Date.parse(b.createTime.replace(/\//g, '-')) || 0) - (Date.parse(a.createTime.replace(/\//g, '-')) || 0)
@@ -31,16 +50,36 @@ export function collectContentItems(app: Pick<App, 'pages'>): ContentItem[] {
 
 export const contentIndexPlugin = (): Plugin => {
   let queue = Promise.resolve()
+  let collectionSignature = ''
+  let restart: (() => Promise<void>) | undefined
+  let restartTimer: ReturnType<typeof setTimeout> | undefined
+  const signature = (app: App) => JSON.stringify(discoverProjectCollections(app.dir.source()))
   const publish = (app: App) => {
     queue = queue.then(async () => {
       await app.writeTemp('content-index.ts',
-        `import type { ContentItem } from '../composables/useContentFilter'\nexport const contentIndex: ContentItem[] = ${JSON.stringify(collectContentItems(app))}\n`)
+        `import type { ContentItem } from ${JSON.stringify(app.dir.source('.vuepress/shared/content.ts'))}\nexport const contentIndex: ContentItem[] = ${JSON.stringify(collectContentItems(app))}\n`)
     })
     return queue
   }
   return {
     name: 'shared-content-index',
-    onPrepared: publish,
-    onPageUpdated: (...args) => publish(args[0]),
+    onPrepared: (app) => {
+      collectionSignature = signature(app)
+      return publish(app)
+    },
+    onWatched: (_, watchers, restartDev) => {
+      restart = restartDev
+      watchers.push({ close: () => { clearTimeout(restartTimer); restart = undefined } })
+    },
+    onPageUpdated: async (...args) => {
+      const app = args[0]
+      await publish(app)
+      if (!restart || signature(app) === collectionSignature) return
+      clearTimeout(restartTimer)
+      // Restart after the page-update queue finishes; VuePress cleanup waits for it.
+      restartTimer = setTimeout(() => {
+        void restart?.().catch(error => console.error('Failed to reload project collections:', error))
+      }, 200)
+    },
   }
 }

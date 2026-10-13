@@ -1,0 +1,6 @@
+/* Plume 默认只缩进第二层起的子项；第一层也使用相同的缩进和层级线。 */
+.vp-sidebar .vp-sidebar-item.level-0 > div > .items {
+  padding-left: 16px;
+  border-left: 1px solid var(--vp-c-divider);
+  transition: border-color var(--vp-t-color);
+}

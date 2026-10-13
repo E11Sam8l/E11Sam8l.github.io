@@ -1,17 +1,7 @@
 import { computed, inject, provide, reactive, shallowRef, toValue, watch } from 'vue'
 import type { InjectionKey, MaybeRefOrGetter } from 'vue'
-import { contentIndex } from '../.temp/content-index'
-
-export type ContentSection = 'blog' | 'knowledge' | 'projects'
-export interface ContentItem {
-  section: ContentSection
-  title: string
-  path: string
-  tags: string[]
-  description: string
-  createTime: string
-  sticky: number
-}
+import { contentIndex } from '@temp/content-index'
+import type { ContentItem, ContentSection } from '../shared/content'
 export interface ContentFilterState {
   selected: string[]
   page: number
@@ -23,7 +13,7 @@ const indexedItems = shallowRef<readonly ContentItem[]>(contentIndex)
 
 // Only immutable content data is shared at module scope. Selection belongs to each app.
 if (import.meta.hot) {
-  import.meta.hot.accept('../.temp/content-index', (module) => {
+  import.meta.hot.accept('@temp/content-index', (module) => {
     if (module) indexedItems.value = module.contentIndex
   })
 }
