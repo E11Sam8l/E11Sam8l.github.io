@@ -7,6 +7,7 @@ import { setupContentFilters } from './composables/useContentFilter'
 import ContentBrowser from './components/ContentBrowser.vue'
 import ContentListPage from './components/ContentListPage.vue'
 import ContentBackLink from './components/ContentBackLink.vue'
+import AboutPage from './components/AboutPage.vue'
 import './styles/page-transition.css'
 import './styles/sidebar.css'
 import './styles/outline.css'
@@ -15,6 +16,7 @@ export default defineClientConfig({
   enhance({ app }) {
     app.component('ContentBrowser', ContentBrowser)
     app.component('ContentListPage', ContentListPage)
+    app.component('AboutPage', AboutPage)
   },
   setup() {
     setupPageTransition()

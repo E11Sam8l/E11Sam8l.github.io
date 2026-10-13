@@ -36,11 +36,11 @@ config:
 ---
 
 <div class="vice-about">
-  <p class="vice-eyebrow">03 / ABOUT ME</p>
+  <p class="vice-eyebrow">03 / ABOUT US</p>
   <h2>你好，<br>我们是 Laplace and E11SAM8L。</h2>
   <p class="vice-about-intro">这是一个用于记录知识、学习过程、项目实践和个人思考的空间。</p>
   <p class="vice-about-note">从学习笔记到动手实践，让每一次探索都留下痕迹。</p>
-  <a class="vice-about-link" :href="withBase('/about/')">进入我的个人主页 ↗</a>
+  <a class="vice-about-link" :href="withBase('/about/')">进入我们的个人主页 ↗</a>
 </div>
 
 <script setup>
