@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { viteBundler } from '@vuepress/bundler-vite'
 import { defineUserConfig } from 'vuepress'
 import { plumeTheme } from 'vuepress-theme-plume'
+import { contentIndexPlugin } from './plugins/contentIndex'
 
 /**
  * DOCS_BASE lets GitHub Pages provide a repository-aware base path.
@@ -14,6 +15,11 @@ export default defineUserConfig({
   base,
   lang: 'zh-CN',
   title: '首页',
+  plugins: [contentIndexPlugin()],
+  extendsPage(page) {
+    // Hide Plume's circular reading-progress / back-to-top control on subpages.
+    if (page.frontmatter.pageLayout !== 'home') page.frontmatter.backToTop = false
+  },
   head: [
     ['script', { id: 'page-appearance' }, `
       (() => {

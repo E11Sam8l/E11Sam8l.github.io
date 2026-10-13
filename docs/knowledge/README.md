@@ -1,14 +1,14 @@
 ---
 title: 知识库
+pageLayout: ContentListPage
+contentSection: knowledge
+sidebar: false
+aside: false
+outline: false
 ---
 
 # 知识库
 
-这里收录可持续整理的知识与学习笔记。每个子目录都可以代表一个主题，目录层级会自动反映在左侧导航中。
+这里收录以文件夹组织的知识项目，可通过项目标签筛选。
 
-## 开始使用
-
-- [Markdown 基础](/knowledge/markdown/)
-- [第一篇笔记](/knowledge/markdown/first-note.html)
-
-新增主题时，在 `docs/knowledge/` 下创建目录并放入 `README.md` 或其他 `.md` 文件即可。
+新增项目时，在 `docs/knowledge/` 下创建一级目录，在项目 `README.md` 中配置标题、简介和标签，再添加其他 Markdown 章节。

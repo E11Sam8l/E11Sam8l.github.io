@@ -1,4 +1,4 @@
-# 文件夹代表知识领域，Markdown代表具体知识点。
+# 一级文件夹代表项目，项目 README 定义筛选信息，其他 Markdown 记录正文。
 
 # 个人知识库与博客 V1
 
@@ -12,14 +12,14 @@ docs/       这里面放的就是我们要写的内容
 ├── knowledge/                         # doc collection：知识库
 │   ├── README.md
 │   └── markdown/
-├── blog/                              # post collection：博客
-├── projects/                          # 项目展示入口
+├── blog/                              # doc collection：博客项目
+├── projects/                          # doc collection：项目展示
 ├── about/                             # 关于页面
 ├── assets/                            # 图片、附件等静态资源
 └── .vuepress/
     ├── config.ts                      # VuePress 构建与 base 配置
     ├── plume.config.ts                 # Plume 导航、集合与文章大纲
-    ├── collections.ts                 # 知识库和博客集合
+    ├── collections.ts                 # 三个栏目的 doc 集合
     └── navbar.ts                      # 顶部导航
 
 legacy/                                # 原 Demo 与旧配置归档
@@ -70,7 +70,8 @@ pnpm build
 - `package.json`：声明 VuePress、Plume 依赖以及 `dev`、`build` 脚本。
 - `docs/.vuepress/config.ts`：设置站点语言、标题、构建器和可迁移的 `DOCS_BASE` 路径。
 - `docs/.vuepress/plume.config.ts`：集中加载顶部导航、内容集合和文章标题大纲设置。
-- `docs/.vuepress/collections.ts`：把 `knowledge/` 配置为 doc collection，把 `blog/` 配置为 post collection。
+- `docs/.vuepress/collections.ts`：把 `knowledge/`、`blog/` 和 `projects/` 配置为 doc collection，正文使用主题的文档布局与自动侧栏。
+- `docs/.vuepress/plugins/contentIndex.ts`：只索引三个栏目一级项目目录中的 `README.md`，读取项目标题、简介和标签。
 - `docs/.vuepress/navbar.ts`：维护顶部导航链接；新增知识库主题不需要修改它。
 - `.github/workflows/deploy.yml`：在合并到 `main` 后安装依赖、构建并发布 `docs/.vuepress/dist/`。
 - `.gitignore`：排除依赖、构建缓存和 Obsidian 本地工作区状态。
@@ -78,31 +79,46 @@ pnpm build
 ## 如何新增知识库目录和笔记
 
 1. 在 `docs/knowledge/` 下创建任意主题目录，例如 `docs/knowledge/摄影/`。
-2. 在目录中添加 `README.md` 作为主题入口，也可以继续创建多层子目录。
+2. 在目录中添加 `README.md` 作为项目入口，配置 `title`、`description` 和 `tags`；栏目筛选只读取这个文件。
 3. 添加 `.md` 文件并使用标准 Markdown 标题组织内容。
 4. 运行 `pnpm dev` 检查页面、左侧导航、右侧标题大纲和站内链接。
 5. `sidebar: 'auto'` 会根据目录自动发现文章，不需要每次修改配置文件。
 
 文件名建议使用小写英文、数字和短横线；中文文件名也可以工作，但统一命名有助于跨平台协作。
 
-## 如何添加博客文章
+## 如何新增项目和内部章节
 
-在 `docs/blog/` 下创建一个 `.md` 文件；建议用子目录表示分类，例如 `docs/blog/项目记录/新文章.md`。可以写基本 frontmatter：
+在 `docs/blog/`、`docs/knowledge/` 或 `docs/projects/` 下创建一级项目目录。例如：
+
+```text
+blog/学习日志/
+├── README.md           # 项目卡片及筛选标签
+├── 学习安排.md          # 内部章节
+└── 补充材料/
+    └── README.md        # 更深层的章节入口，不生成项目卡片
+```
+
+一级项目目录的 `README.md` 可以写成：
 
 ```md
 ---
-title: 一篇新文章
+title: 学习日志
+description: 记录学习安排与每周复盘。
 createTime: 2026/10/08 12:00:00
 tags:
   - 标签名称
 ---
 
-# 一篇新文章
+# 学习日志
 
-正文从这里开始。
+项目介绍与章节链接从这里开始。
 ```
 
-博客集合会生成文章列表，并提供分类、标签和归档入口；文章所在的子目录会自动成为分类，不需要额外修改集合配置。
+栏目入口每个项目只显示一张卡片，标签筛选支持多选，匹配任意所选标签。点击项目卡片进入项目 README，再通过章节链接或自动侧栏阅读内部文档。
+
+栏目根目录的 README、项目内部普通 Markdown、更深层的 README 和其他栏目内容不会单独进入项目筛选。内部文档的标签也不会影响项目卡片；新增、修改或删除项目 README 后，开发服务会更新索引。
+
+现有示例包括 `blog/learning-journal/`、`knowledge/algorithm-notes/` 和 `projects/task-board/`，三个栏目都包含“示例”标签，可用于验证栏目之间的筛选状态隔离。
 
 ## 图片与附件
 
@@ -157,6 +173,6 @@ git push -u origin HEAD
 
 ## 当前 V1 范围
 
-已包含首页、知识库 doc collection、博客 post collection、自动侧边栏、文章标题大纲、本地搜索、代码高亮、项目入口、Obsidian 忽略规则和 Pages 工作流。复杂 UI、评论、知识图谱、AI 问答与后端功能留待后续版本。
+已包含首页、知识库／博客／项目三个 doc collection、项目 README 标签多选筛选、自动侧边栏、文章标题大纲、本地搜索、代码高亮、Obsidian 忽略规则和 Pages 工作流。评论、知识图谱、AI 问答与后端功能留待后续版本。
 
 

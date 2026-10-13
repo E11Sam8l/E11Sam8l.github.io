@@ -1,5 +1,9 @@
 ---
-title: Markdown
+title: 第二篇
+description: Markdown 学习项目，包含基础笔记和后续章节。
+tags:
+  - Markdown
+  - 中级
 ---
 
 # Markdown
