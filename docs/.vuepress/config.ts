@@ -4,6 +4,7 @@ import { viteBundler } from '@vuepress/bundler-vite'
 import { defineUserConfig } from 'vuepress'
 import { plumeTheme } from 'vuepress-theme-plume'
 import { contentIndexPlugin } from './plugins/contentIndex'
+import { resourceHintsPlugin } from './plugins/resourceHints'
 import { contentPageClasses, getContentSection } from './shared/contentTheme'
 
 /**
@@ -17,7 +18,7 @@ export default defineUserConfig({
   base,
   lang: 'zh-CN',
   title: '首页',
-  plugins: [contentIndexPlugin()],
+  plugins: [contentIndexPlugin(), resourceHintsPlugin()],
   extendsPage(page) {
     const section = getContentSection(page.filePathRelative)
     if (section) page.frontmatter.pageClass = contentPageClasses(section, page.frontmatter.pageClass)
@@ -44,6 +45,11 @@ export default defineUserConfig({
     `],
   ],
   bundler: viteBundler({
+    viteOptions: {
+      resolve: {
+        alias: [{ find: /^hash-wasm$/, replacement: fileURLToPath(new URL('./shared/lazyHash.ts', import.meta.url)) }],
+      },
+    },
     // Vue 3.5 resolves imported types in theme SFCs through this Node fs adapter.
     vuePluginOptions: {
       script: {

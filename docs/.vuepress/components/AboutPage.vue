@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { usePageFrontmatter } from 'vuepress/client'
+import { avatarFor } from '../shared/profileAssets'
 import '../styles/about.css'
 
 interface Experience {
@@ -20,19 +21,6 @@ interface Profile {
 
 const frontmatter = usePageFrontmatter<{ profiles?: Profile[] }>()
 const profiles = computed(() => frontmatter.value.profiles?.slice(0, 2) ?? [])
-const avatars = import.meta.glob('../../about/*.{png,jpg,jpeg,webp,avif,svg}', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>
-
-function avatarFor(profile: Profile): string | undefined {
-  const requested = profile.avatar?.replace(/^\.\//, '').toLowerCase()
-  return Object.entries(avatars).find(([path]) => {
-    const filename = path.split('/').pop()!.toLowerCase()
-    return requested ? filename === requested : filename.replace(/\.[^.]+$/, '') === profile.name.toLowerCase()
-  })?.[1]
-}
 </script>
 
 <template>

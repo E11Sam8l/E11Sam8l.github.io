@@ -1,4 +1,37 @@
 /* Every page already has a home link in the navigation menu. */
+.vice-loading-status {
+  position: fixed;
+  z-index: 10000;
+  top: calc(var(--vp-nav-height, 64px) + 16px);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border: 1px solid #f7b7ca66;
+  border-radius: 28px;
+  background: #211730;
+  color: #fff1f5;
+  font-size: 14px;
+  box-shadow: 0 8px 32px #160d3633;
+}
+.vice-loading-status::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid #f7b7ca44;
+  border-top-color: #ffb493;
+  border-radius: 50%;
+  animation: vice-loading-spin .8s linear infinite;
+}
+@keyframes vice-loading-spin { to { transform: rotate(360deg); } }
+.vice-loading-error::before { display: none; }
+.vice-loading-error button { color: #ffb493; text-decoration: underline; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+  .vice-loading-status::before { animation: none; }
+}
+
 .vp-navbar-title .title {
   display: none;
 }

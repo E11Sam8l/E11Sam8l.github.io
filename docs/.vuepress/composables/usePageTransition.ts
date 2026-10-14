@@ -1,6 +1,8 @@
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter, withBase } from 'vuepress/client'
 import { darkModeSymbol } from 'vuepress-theme-plume/client'
+import { usePageReadiness, waitForPagePixels } from './usePageReadiness'
+import { withResourceDeadline } from '../shared/resourceDeadline'
 import {
   isHomePath as isHome,
   resolveHomeTransitionTarget,
@@ -14,6 +16,7 @@ let activeTransition: { token: symbol; cancel: () => void } | null = null
 export function setupPageTransition() {
   const route = useRoute()
   const router = useRouter()
+  const preparePage = usePageReadiness()
   const preferredDark = ref(false)
   let applyingAppearance = true
   let revision = 0
@@ -105,6 +108,13 @@ export function setupPageTransition() {
   }
 
   let navigating = false
+  let loadingTimer: ReturnType<typeof setTimeout> | undefined
+  let loadingStatus: HTMLElement | undefined
+  const clearLoading = () => {
+    clearTimeout(loadingTimer)
+    loadingStatus?.remove()
+    loadingStatus = undefined
+  }
   // Back/forward buttons and programmatic router pushes do not produce a click
   // event. Give those route changes the same lightweight entrance treatment.
   watch(() => route.path, (path, previousPath) => {
@@ -121,6 +131,9 @@ export function setupPageTransition() {
       ? event.target.closest<HTMLAnchorElement>('a[href]')
       : null
     if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return
+    // Search owns its result click: it closes the dialog and replaces the
+    // temporary search history entry. The route watcher supplies its animation.
+    if (link.closest('.VPLocalSearchBox')) return
 
     const currentUrl = new URL(window.location.href)
     const targetUrl = new URL(link.href, currentUrl)
@@ -134,6 +147,16 @@ export function setupPageTransition() {
     event.preventDefault()
     event.stopImmediatePropagation()
     navigating = true
+    const sourcePath = route.fullPath
+    clearLoading()
+    // Cached/fast navigation stays visually identical; slow requests get feedback.
+    loadingTimer = setTimeout(() => {
+      loadingStatus = document.createElement('div')
+      loadingStatus.className = 'vice-loading-status'
+      loadingStatus.setAttribute('role', 'status')
+      loadingStatus.textContent = '正在准备页面…'
+      document.body.append(loadingStatus)
+    }, 180)
 
     const homeTarget = resolveHomeTransitionTarget(route.path, link.href, currentUrl.href, base)
     const root = document.documentElement
@@ -154,16 +177,21 @@ export function setupPageTransition() {
     }
     previousTransition?.cancel()
 
-    let navigationStarted = false
+    let keepError = false
     const navigate = async () => {
-      navigationStarted = true
       const failure = await router.push(destination)
       if (failure) throw failure
       await nextTick()
       await nextTick()
+      if (useCircularReveal && !reducedMotion) await waitForPagePixels()
     }
 
     try {
+      // Fetch and evaluate before taking the old snapshot. The source page stays
+      // responsive while GitHub Pages delivers the destination's chunks.
+      await withResourceDeadline(preparePage(destination), 8000)
+      clearLoading()
+      if (disposed || route.fullPath !== sourcePath) return
       // Homepage and section endpoints share one circular reveal. Other routes
       // use a CSS entrance after navigation so they do not hold a view-transition
       // snapshot while a remote page chunk is being evaluated.
@@ -197,9 +225,24 @@ export function setupPageTransition() {
         }),
       ])
     } catch (error) {
-      if (!navigationStarted) await navigate().catch(() => {})
-      else if (error instanceof Error) console.warn('Page transition was interrupted:', error)
+      if (!disposed && route.fullPath === sourcePath) {
+        clearLoading()
+        loadingStatus = document.createElement('div')
+        loadingStatus.className = 'vice-loading-status vice-loading-error'
+        loadingStatus.setAttribute('role', 'alert')
+        loadingStatus.textContent = '页面暂时未能加载'
+        const retry = document.createElement('button')
+        retry.type = 'button'
+        retry.textContent = '刷新重试'
+        // A full document request also recovers after a deployment replaces old chunks.
+        retry.addEventListener('click', () => { window.location.assign(targetUrl.href) })
+        loadingStatus.append(retry)
+        document.body.append(loadingStatus)
+        keepError = true
+      }
+      if (error instanceof Error) console.warn('Page transition was interrupted:', error)
     } finally {
+      if (!keepError) clearLoading()
       clearTimeout(stopTimer)
       if (activeTransition?.token === token) {
         root.classList.remove('vice-page-transition', 'vice-page-transition-reverse')
@@ -244,6 +287,7 @@ export function setupPageTransition() {
     disposed = true
     revision++
     stopFallbackAnimation()
+    clearLoading()
     observer?.disconnect()
     document.removeEventListener('click', onClick, { capture: true })
     window.removeEventListener('beforeprint', beforePrint)

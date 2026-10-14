@@ -13,7 +13,10 @@
     "dev": "vuepress dev docs",
     "dev:clean": "vuepress dev docs --clean-cache --clean-temp",
     "build": "vuepress build docs --temp docs/.vuepress/.build-temp --cache docs/.vuepress/.build-cache",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "verify:pages": "node scripts/check-pages.mjs",
+    "verify:browser": "node scripts/check-browser.mjs",
+    "perf:browser": "node scripts/browser-performance.mjs"
   },
   "devDependencies": {
     "@iconify/vue": "5.0.3",

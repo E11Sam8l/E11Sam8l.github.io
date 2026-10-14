@@ -151,6 +151,7 @@ pnpm dev
 ```bash
 pnpm test
 pnpm build
+pnpm verify:pages
 ```
 
 ## 7. 提交并发布
@@ -163,6 +164,10 @@ git commit -m "docs: add new project documentation"
 ```
 
 将内容推送到工作分支并合并到 `main` 后，GitHub Actions 会运行测试、构建并发布到 GitHub Pages。构建产物位于 `docs/.vuepress/dist/`，已被 Git 忽略。
+
+仓库的 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。当前用户站点使用 `/`；工作流也会读取 Pages 提供的仓库子路径，不需要手动修改图片或导航地址。
+
+性能优化、测试结果和复测方式见 [PERFORMANCE.md](./PERFORMANCE.md)。发布前的资源检查会验证页面及 CSS 的本地资源路径，并限制首屏脚本体积，避免更新时意外把按需功能打回首屏。
 
 ## 常见情况
 
