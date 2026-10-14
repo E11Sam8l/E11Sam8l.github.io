@@ -1,3 +1,8 @@
+/* Every page already has a home link in the navigation menu. */
+.vp-navbar-title .title {
+  display: none;
+}
+
 /* The homepage always uses dark mode; reading pages retain Plume's theme switch. */
 html.vice-home-appearance .vp-navbar-appearance,
 html.vice-home-appearance .vp-navbar-extra .group.appearance,
@@ -7,13 +12,17 @@ html.vice-home-appearance .vp-nav-screen-appearance {
 
 /* Preserve the mirrored circular reveal for homepage-to-section directions. */
 html.vice-page-transition::view-transition-group(root) {
-  animation: none;
+  animation: none !important;
+}
+
+html.vice-page-transition::view-transition-image-pair(root) {
+  isolation: isolate;
 }
 
 html.vice-page-transition::view-transition-old(root),
 html.vice-page-transition::view-transition-new(root) {
-  animation: none;
-  opacity: 1;
+  animation: none !important;
+  opacity: 1 !important;
   mix-blend-mode: normal;
 }
 
@@ -33,6 +42,28 @@ html.vice-page-transition-reverse::view-transition-old(root) {
 
 html.vice-page-transition-reverse::view-transition-new(root) {
   z-index: 1;
+}
+
+/* Start clipping with the snapshot's first frame and keep both screenshots
+   alive for the full reveal, instead of attaching an animation after ready. */
+html.vice-page-transition:not(.vice-page-transition-reverse)::view-transition-new(root) {
+  clip-path: circle(0px at 100% 0);
+  animation: vice-circular-reveal 1200ms cubic-bezier(.22, 1, .36, 1) both !important;
+}
+
+html.vice-page-transition-reverse::view-transition-old(root) {
+  clip-path: circle(var(--vice-transition-radius) at 100% 0);
+  animation: vice-circular-conceal 1200ms cubic-bezier(.22, 1, .36, 1) both !important;
+}
+
+@keyframes vice-circular-reveal {
+  from { clip-path: circle(0px at 100% 0); }
+  to { clip-path: circle(var(--vice-transition-radius) at 100% 0); }
+}
+
+@keyframes vice-circular-conceal {
+  from { clip-path: circle(var(--vice-transition-radius) at 100% 0); }
+  to { clip-path: circle(0px at 100% 0); }
 }
 
 /* Capture the fully visible target page rather than Plume's entrance animation. */
