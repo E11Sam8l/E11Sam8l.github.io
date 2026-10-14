@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { resolveHomeTransitionTarget } from '../docs/.vuepress/shared/homeTransition.ts'
+import { resolveHomeTransitionTarget, resolveInternalTransitionTarget } from '../docs/.vuepress/shared/homeTransition.ts'
 
 const location = 'https://example.com/'
 const destinations = ['/knowledge/', '/blog/', '/projects/', '/about/']
@@ -39,4 +39,18 @@ test('external destinations and unrelated links do not start the reveal', () => 
   for (const destination of ['https://other.example/blog/', '/assets/example.pdf', '/unknown/']) {
     assert.equal(resolveHomeTransitionTarget('/', destination, location), undefined)
   }
+})
+
+test('internal route links keep repository bases, queries, and anchors', () => {
+  assert.equal(
+    resolveInternalTransitionTarget(
+      'https://example.com/site/blog/first-post/?tag=VuePress#intro',
+      'https://example.com/site/knowledge/',
+      '/site/',
+    ),
+    '/blog/first-post/?tag=VuePress#intro',
+  )
+  assert.equal(resolveInternalTransitionTarget('/site/', 'https://example.com/site/blog/', '/site/'), '/')
+  assert.equal(resolveInternalTransitionTarget('https://other.example/blog/', location), undefined)
+  assert.equal(resolveInternalTransitionTarget('/blog/', 'https://example.com/site/', '/site/'), undefined)
 })

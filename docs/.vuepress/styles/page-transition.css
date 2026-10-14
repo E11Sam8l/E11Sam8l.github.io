@@ -5,7 +5,7 @@ html.vice-home-appearance .vp-nav-screen-appearance {
   display: none;
 }
 
-/* Only homepage-to-section links use the circular reveal. */
+/* The homepage-to-section links use the circular reveal. */
 html.vice-page-transition::view-transition-group(root) {
   animation: none;
 }
@@ -47,4 +47,69 @@ html.vice-page-transition {
 /* The mobile navigation closes on route change; keep its exit layer out of the snapshot. */
 html.vice-page-transition .vp-nav-screen {
   display: none;
+}
+
+/* Every other internal route uses a short slide/fade. Keeping the old and new
+   snapshots independent makes the effect reliable when a GitHub Pages chunk
+   takes a little longer to load. */
+html.vice-route-transition::view-transition-group(root) {
+  animation: none;
+}
+
+html.vice-route-transition::view-transition-old(root),
+html.vice-route-transition::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
+html.vice-route-transition::view-transition-old(root) {
+  z-index: 1;
+  animation: vice-route-old 260ms cubic-bezier(.4, 0, 1, 1) both;
+}
+
+html.vice-route-transition::view-transition-new(root) {
+  z-index: 2;
+  animation: vice-route-new 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+html.vice-route-transition .fade-slide-y-enter-active,
+html.vice-route-transition .fade-slide-y-leave-active,
+html.vice-route-transition .fade-slide-x-enter-active,
+html.vice-route-transition .fade-slide-x-leave-active {
+  transition: none !important;
+}
+
+html.vice-route-transition .fade-slide-y-enter-from,
+html.vice-route-transition .fade-slide-y-leave-to,
+html.vice-route-transition .fade-slide-x-enter-from,
+html.vice-route-transition .fade-slide-x-leave-to {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html.vice-route-transition .vp-nav-screen {
+  display: none;
+}
+
+/* Fallback for browsers without document.startViewTransition. */
+html.vice-route-fallback {
+  animation: vice-route-fallback 460ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes vice-route-old {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-14px); }
+}
+
+@keyframes vice-route-new {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes vice-route-fallback {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.vice-route-fallback { animation: none; }
 }

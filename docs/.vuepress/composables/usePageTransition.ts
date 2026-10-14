@@ -1,7 +1,11 @@
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter, withBase } from 'vuepress/client'
 import { darkModeSymbol } from 'vuepress-theme-plume/client'
-import { isHomePath as isHome, resolveHomeTransitionTarget } from '../shared/homeTransition'
+import {
+  isHomePath as isHome,
+  resolveHomeTransitionTarget,
+  resolveInternalTransitionTarget,
+} from '../shared/homeTransition'
 
 const appearanceKey = 'vice-page-appearance'
 let activeTransition: { token: symbol; cancel: () => void } | null = null
@@ -9,6 +13,7 @@ let activeTransition: { token: symbol; cancel: () => void } | null = null
 /** Keep the reading preference separate from Plume's forced homepage theme. */
 export function setupPageTransition() {
   const route = useRoute()
+  const router = useRouter()
   const preferredDark = ref(false)
   let applyingAppearance = true
   let revision = 0
@@ -76,6 +81,134 @@ export function setupPageTransition() {
     if (!disposed && currentRevision === revision) applyingAppearance = false
   }, { flush: 'sync' })
 
+  const runFallbackAnimation = () => {
+    const root = document.documentElement
+    root.classList.remove('vice-route-fallback')
+    // Restart the short entrance animation when a user navigates repeatedly.
+    void root.offsetWidth
+    root.classList.add('vice-route-fallback')
+    window.setTimeout(() => root.classList.remove('vice-route-fallback'), 460)
+  }
+
+  let navigating = false
+  // Back/forward buttons and programmatic router pushes do not produce a click
+  // event. Give those route changes the same lightweight entrance treatment.
+  watch(() => route.path, (path, previousPath) => {
+    if (path === previousPath || navigating || typeof document === 'undefined') return
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+      runFallbackAnimation()
+  }, { flush: 'post' })
+
+  const onClick = async (event: MouseEvent) => {
+    if (event.defaultPrevented || event.button !== 0) return
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+    const link = event.target instanceof Element
+      ? event.target.closest<HTMLAnchorElement>('a[href]')
+      : null
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return
+
+    const currentUrl = new URL(window.location.href)
+    const targetUrl = new URL(link.href, currentUrl)
+    // Let the browser/router handle in-page anchors without replacing the page.
+    if (targetUrl.pathname === currentUrl.pathname && targetUrl.search === currentUrl.search) return
+
+    const base = withBase('/')
+    const destination = resolveInternalTransitionTarget(link.href, currentUrl.href, base)
+    if (!destination || navigating) return
+
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    navigating = true
+
+    const homeTarget = resolveHomeTransitionTarget(route.path, link.href, currentUrl.href, base)
+    const root = document.documentElement
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const useCircularReveal = Boolean(homeTarget && typeof root.animate === 'function')
+    const token = Symbol('page-transition')
+    const previousTransition = activeTransition
+    let transitionStopped = false
+    let transition: ViewTransition | undefined
+    let stopTimer: ReturnType<typeof setTimeout> | undefined
+    activeTransition = {
+      token,
+      cancel: () => {
+        transitionStopped = true
+        transition?.skipTransition()
+      },
+    }
+    previousTransition?.cancel()
+
+    let navigationStarted = false
+    const navigate = async () => {
+      navigationStarted = true
+      const failure = await router.push(destination)
+      if (failure) throw failure
+      await nextTick()
+      await nextTick()
+    }
+
+    try {
+      if (reducedMotion || typeof document.startViewTransition !== 'function') {
+        await navigate()
+        if (!reducedMotion) runFallbackAnimation()
+        return
+      }
+
+      root.classList.add(useCircularReveal ? 'vice-page-transition' : 'vice-route-transition')
+      transition = document.startViewTransition(navigate)
+
+      if (useCircularReveal) {
+        const rect = link.getBoundingClientRect()
+        const x = rect.left + rect.width / 2
+        const y = rect.top + rect.height / 2
+        const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+        void transition.ready.then(() => {
+          if (transitionStopped || activeTransition?.token !== token) return
+          root.animate([
+            { clipPath: `circle(0px at ${x}px ${y}px)` },
+            { clipPath: `circle(${radius}px at ${x}px ${y}px)` },
+          ], {
+            duration: 750,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'both',
+            pseudoElement: '::view-transition-new(root)',
+          })
+        }).catch(() => transition?.skipTransition())
+      }
+
+      // A slow GitHub Pages chunk must not make the transition disappear. The
+      // timeout is only a last-resort escape hatch for a stalled navigation.
+      await Promise.race([
+        transition.finished.catch(() => undefined),
+        new Promise<void>(resolve => {
+          stopTimer = setTimeout(() => {
+            transitionStopped = true
+            transition?.skipTransition()
+            resolve()
+          }, 6000)
+        }),
+      ])
+    } catch (error) {
+      if (!navigationStarted) await navigate().catch(() => {})
+      else if (error instanceof Error) console.warn('Page transition was interrupted:', error)
+    } finally {
+      transitionStopped = true
+      clearTimeout(stopTimer)
+      if (activeTransition?.token === token) {
+        root.classList.remove('vice-page-transition', 'vice-route-transition')
+        activeTransition = null
+      }
+      navigating = false
+    }
+  }
+
+  onMounted(() => {
+    // Capture links globally so navigation from the homepage, section listings,
+    // article pages, breadcrumbs, and the navbar shares one transition path.
+    document.addEventListener('click', onClick, { capture: true })
+  })
+
   onMounted(async () => {
     // Plume still has legacy system/storage listeners. Reconcile their DOM writes
     // without writing back to that storage, avoiding cross-tab feedback loops.
@@ -104,124 +237,14 @@ export function setupPageTransition() {
     disposed = true
     revision++
     observer?.disconnect()
+    document.removeEventListener('click', onClick, { capture: true })
     window.removeEventListener('beforeprint', beforePrint)
     window.removeEventListener('afterprint', afterPrint)
   })
 }
 
-/** Reveal the destination from a homepage card, about button or navbar link. */
+/** Kept as a compatibility hook for existing homepage markdown. */
 export function useHomePageTransition() {
-  const router = useRouter()
-  const route = useRoute()
-  let navigating = false
-
-  const onClick = async (event: MouseEvent) => {
-    if (!isHome(route.path) || event.defaultPrevented) return
-    const link = event.target instanceof Element
-      ? event.target.closest<HTMLAnchorElement>(
-          'a.vp-home-feature, a.vice-about-link, .vp-navbar-menu a.navbar-menu-link, .vp-nav-screen-menu a.vp-link',
-        )
-      : null
-    if (!link) return
-
-    // Preserve native new-tab behavior instead of Plume's ordinary click handler.
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
-      || link.hasAttribute('download') || (link.target && link.target !== '_self')) {
-      event.stopImmediatePropagation()
-      return
-    }
-
-    const destination = resolveHomeTransitionTarget(route.path, link.href, window.location.href, withBase('/'))
-    if (!destination) return
-
-    event.preventDefault()
-    event.stopImmediatePropagation()
-    if (navigating) return
-    navigating = true
-
-    const rect = link.getBoundingClientRect()
-    const x = rect.left + rect.width / 2
-    const y = rect.top + rect.height / 2
-    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
-    const root = document.documentElement
-    let navigationStarted = false
-    let transitionStopped = false
-    let transition: ViewTransition | undefined
-    let stopTimer: ReturnType<typeof setTimeout> | undefined
-    const token = Symbol('home-transition')
-    const previousTransition = activeTransition
-    activeTransition = {
-      token,
-      cancel: () => {
-        transitionStopped = true
-        transition?.skipTransition()
-      },
-    }
-    previousTransition?.cancel()
-    const navigate = async () => {
-      navigationStarted = true
-      const failure = await router.push(destination)
-      if (failure) throw failure
-      await nextTick()
-      await nextTick()
-      // View Transition suppresses rendering until this callback completes.
-      // Await Vue's DOM updates, never an animation frame or CSS animation here.
-    }
-
-    try {
-      if (typeof document.startViewTransition !== 'function' || typeof root.animate !== 'function'
-        || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        await navigate()
-        return
-      }
-
-      root.classList.add('vice-page-transition')
-      transition = document.startViewTransition(navigate)
-      void transition.ready.then(() => {
-        if (transitionStopped || activeTransition?.token !== token) return
-        root.animate([
-          { clipPath: `circle(0px at ${x}px ${y}px)` },
-          { clipPath: `circle(${radius}px at ${x}px ${y}px)` },
-        ], {
-          duration: 750,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          fill: 'both',
-          pseudoElement: '::view-transition-new(root)',
-        })
-      }).catch(() => {
-        // Failed or unsupported animation must not obstruct the destination page.
-        transition?.skipTransition()
-      })
-      await Promise.race([
-        transition.finished,
-        new Promise<void>((resolve) => {
-          stopTimer = setTimeout(() => {
-            transitionStopped = true
-            transition?.skipTransition()
-            resolve()
-          }, 2500)
-        }),
-      ])
-    } catch (error) {
-      if (!navigationStarted) await navigate().catch(() => {})
-      else if (error instanceof Error) console.warn('Page transition was interrupted:', error)
-    } finally {
-      transitionStopped = true
-      clearTimeout(stopTimer)
-      if (activeTransition?.token === token) {
-        root.classList.remove('vice-page-transition')
-        activeTransition = null
-      }
-      navigating = false
-    }
-  }
-
-  onMounted(() => {
-    // Navbar links live outside the homepage content, so capture at the document.
-    document.addEventListener('click', onClick, { capture: true })
-  })
-  onUnmounted(() => {
-    document.removeEventListener('click', onClick, { capture: true })
-    // The transition intentionally outlives the homepage component it replaces.
-  })
+  // Site-wide navigation is installed by setupPageTransition(), which runs once
+  // for the app and therefore survives the homepage component being replaced.
 }

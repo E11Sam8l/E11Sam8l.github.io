@@ -17,18 +17,23 @@ export function useHomeScroll() {
     const heading = home.querySelector<HTMLElement>('.hero-name')
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
     let frame = 0
+    let panelStarts: number[] = []
+    let panelDurations: number[] = []
     const clamp = (n: number) => Math.max(0, Math.min(1, n))
-    const panelTop = (panel: HTMLElement) => panel.getBoundingClientRect().top - home.getBoundingClientRect().top + home.scrollTop
     home.classList.add('vice-three-screens')
     panels.forEach(panel => panel.classList.add('vice-screen'))
 
     const render = () => {
       frame = 0
-      const viewport = home.clientHeight
+      const viewport = Math.max(1, home.clientHeight)
+      const scrollTop = home.scrollTop
       panels.forEach((panel, index) => {
-        const offset = panelTop(panel) - home.scrollTop
+        // Layout coordinates are measured only in resize(). Reading a
+        // bounding rect for every panel on every scroll frame forces a layout
+        // after the style writes from the previous frame.
+        const offset = (panelStarts[index] ?? 0) - scrollTop
         const entrance = clamp(1 - Math.max(0, offset) / viewport)
-        const duration = Math.max(1, panel.offsetHeight - scenes[index].offsetHeight)
+        const duration = panelDurations[index] ?? 1
         const departure = index === 2 ? 0 : clamp(-offset / duration)
         const fade = index === 0 ? departure * .9 : Math.max(1 - entrance, clamp((departure - .35) / .65)) * .85
         panel.style.setProperty('--vice-panel-opacity', String(motion.matches ? 1 : 1 - fade))
@@ -50,6 +55,15 @@ export function useHomeScroll() {
         heading.style.setProperty('--vice-connector-x', `${title.offsetLeft + connector.offsetLeft + connector.offsetWidth / 2}px`)
       }
       panels.forEach((panel, index) => panel.style.setProperty('--vice-content-height', `${scenes[index].offsetHeight}px`))
+
+      // The CSS custom property above changes the scroll geometry. Measure the
+      // new geometry once, then let scroll frames use these cached values.
+      const homeTop = home.getBoundingClientRect().top
+      const scrollTop = home.scrollTop
+      panelStarts = panels.map(panel => panel.getBoundingClientRect().top - homeTop + scrollTop)
+      panelDurations = panels.map((panel, index) =>
+        Math.max(1, panel.offsetHeight - scenes[index].offsetHeight),
+      )
       schedule()
     }
     home.tabIndex = 0
