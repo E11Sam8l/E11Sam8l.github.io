@@ -81,13 +81,22 @@ export function setupPageTransition() {
     if (!disposed && currentRevision === revision) applyingAppearance = false
   }, { flush: 'sync' })
 
-  const runFallbackAnimation = () => {
+  let fallbackFrame: number | undefined
+  let fallbackTimer: number | undefined
+  const runFallbackAnimation = (direction: 'forward' | 'back' = 'forward') => {
     const root = document.documentElement
-    root.classList.remove('vice-route-fallback')
-    // Restart the short entrance animation when a user navigates repeatedly.
-    void root.offsetWidth
-    root.classList.add('vice-route-fallback')
-    window.setTimeout(() => root.classList.remove('vice-route-fallback'), 460)
+    if (fallbackFrame !== undefined) cancelAnimationFrame(fallbackFrame)
+    if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer)
+    root.classList.remove('vice-route-forward', 'vice-route-back')
+    // Restart on the next frame instead of forcing a synchronous layout.
+    fallbackFrame = requestAnimationFrame(() => {
+      fallbackFrame = undefined
+      root.classList.add(direction === 'back' ? 'vice-route-back' : 'vice-route-forward')
+      fallbackTimer = window.setTimeout(() => {
+        fallbackTimer = undefined
+        root.classList.remove('vice-route-forward', 'vice-route-back')
+      }, 760)
+    })
   }
 
   let navigating = false
@@ -96,7 +105,7 @@ export function setupPageTransition() {
   watch(() => route.path, (path, previousPath) => {
     if (path === previousPath || navigating || typeof document === 'undefined') return
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-      runFallbackAnimation()
+      runFallbackAnimation(isHome(path) && !isHome(previousPath) ? 'back' : 'forward')
   }, { flush: 'post' })
 
   const onClick = async (event: MouseEvent) => {
@@ -124,11 +133,15 @@ export function setupPageTransition() {
     const homeTarget = resolveHomeTransitionTarget(route.path, link.href, currentUrl.href, base)
     const root = document.documentElement
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const useCircularReveal = Boolean(homeTarget && typeof root.animate === 'function')
+    const destinationPath = destination.split(/[?#]/, 1)[0]
+    const returningHome = isHome(destinationPath) && !isHome(route.path)
+    const endpointTransition = Boolean(homeTarget || returningHome)
+    const useCircularReveal = Boolean(endpointTransition && typeof root.animate === 'function')
     const token = Symbol('page-transition')
     const previousTransition = activeTransition
     let transitionStopped = false
     let transition: ViewTransition | undefined
+      let revealFinished: Promise<unknown> = Promise.resolve()
     let stopTimer: ReturnType<typeof setTimeout> | undefined
     activeTransition = {
       token,
@@ -149,38 +162,57 @@ export function setupPageTransition() {
     }
 
     try {
-      if (reducedMotion || typeof document.startViewTransition !== 'function') {
+      // Homepage and section endpoints share one circular reveal. Other routes
+      // use a CSS entrance after navigation so they do not hold a view-transition
+      // snapshot while a remote page chunk is being evaluated.
+      if (!useCircularReveal || reducedMotion || typeof document.startViewTransition !== 'function') {
         await navigate()
-        if (!reducedMotion) runFallbackAnimation()
+        if (!reducedMotion) runFallbackAnimation(returningHome ? 'back' : 'forward')
         return
       }
 
-      root.classList.add(useCircularReveal ? 'vice-page-transition' : 'vice-route-transition')
+      root.classList.add('vice-page-transition')
+      if (returningHome) root.classList.add('vice-page-transition-reverse')
       transition = document.startViewTransition(navigate)
 
       if (useCircularReveal) {
-        const rect = link.getBoundingClientRect()
-        const x = rect.left + rect.width / 2
-        const y = rect.top + rect.height / 2
-        const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
-        void transition.ready.then(() => {
+        // The return transition is the exact reverse of the outgoing one:
+        // both use the same top-right origin and the same duration/easing.
+        const x = innerWidth
+        const y = 0
+        const radius = Math.hypot(innerWidth, innerHeight)
+        revealFinished = transition.ready.then(() => {
           if (transitionStopped || activeTransition?.token !== token) return
-          root.animate([
-            { clipPath: `circle(0px at ${x}px ${y}px)` },
-            { clipPath: `circle(${radius}px at ${x}px ${y}px)` },
-          ], {
-            duration: 750,
+          const keyframes = returningHome
+            ? [
+                { clipPath: `circle(${radius}px at ${x}px ${y}px)` },
+                { clipPath: `circle(0px at ${x}px ${y}px)` },
+              ]
+            : [
+                { clipPath: `circle(0px at ${x}px ${y}px)` },
+                { clipPath: `circle(${radius}px at ${x}px ${y}px)` },
+              ]
+          const reveal = root.animate(keyframes, {
+            duration: 1100,
             easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
             fill: 'both',
-            pseudoElement: '::view-transition-new(root)',
+            pseudoElement: returningHome
+              ? '::view-transition-old(root)'
+              : '::view-transition-new(root)',
           })
-        }).catch(() => transition?.skipTransition())
+          return reveal.finished.catch(() => undefined)
+        }).catch(() => {
+          transition?.skipTransition()
+        })
       }
 
       // A slow GitHub Pages chunk must not make the transition disappear. The
       // timeout is only a last-resort escape hatch for a stalled navigation.
       await Promise.race([
-        transition.finished.catch(() => undefined),
+        Promise.all([
+          transition.finished.catch(() => undefined),
+          revealFinished,
+        ]),
         new Promise<void>(resolve => {
           stopTimer = setTimeout(() => {
             transitionStopped = true
@@ -196,7 +228,7 @@ export function setupPageTransition() {
       transitionStopped = true
       clearTimeout(stopTimer)
       if (activeTransition?.token === token) {
-        root.classList.remove('vice-page-transition', 'vice-route-transition')
+        root.classList.remove('vice-page-transition', 'vice-page-transition-reverse')
         activeTransition = null
       }
       navigating = false
@@ -236,6 +268,8 @@ export function setupPageTransition() {
   onUnmounted(() => {
     disposed = true
     revision++
+    if (fallbackFrame !== undefined) cancelAnimationFrame(fallbackFrame)
+    if (fallbackTimer !== undefined) window.clearTimeout(fallbackTimer)
     observer?.disconnect()
     document.removeEventListener('click', onClick, { capture: true })
     window.removeEventListener('beforeprint', beforePrint)

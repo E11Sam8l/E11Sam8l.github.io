@@ -5,7 +5,7 @@ html.vice-home-appearance .vp-nav-screen-appearance {
   display: none;
 }
 
-/* The homepage-to-section links use the circular reveal. */
+/* Preserve the mirrored circular reveal for homepage-to-section directions. */
 html.vice-page-transition::view-transition-group(root) {
   animation: none;
 }
@@ -13,6 +13,7 @@ html.vice-page-transition::view-transition-group(root) {
 html.vice-page-transition::view-transition-old(root),
 html.vice-page-transition::view-transition-new(root) {
   animation: none;
+  opacity: 1;
   mix-blend-mode: normal;
 }
 
@@ -22,6 +23,16 @@ html.vice-page-transition::view-transition-old(root) {
 
 html.vice-page-transition::view-transition-new(root) {
   z-index: 2;
+}
+
+/* Returning home reveals the new page underneath while the old page plays the
+   same clip-path backwards. */
+html.vice-page-transition-reverse::view-transition-old(root) {
+  z-index: 2;
+}
+
+html.vice-page-transition-reverse::view-transition-new(root) {
+  z-index: 1;
 }
 
 /* Capture the fully visible target page rather than Plume's entrance animation. */
@@ -49,67 +60,29 @@ html.vice-page-transition .vp-nav-screen {
   display: none;
 }
 
-/* Every other internal route uses a short slide/fade. Keeping the old and new
-   snapshots independent makes the effect reliable when a GitHub Pages chunk
-   takes a little longer to load. */
-html.vice-route-transition::view-transition-group(root) {
-  animation: none;
+/* All other links use a lightweight CSS-only entrance after the route is ready. It
+   avoids holding a view-transition snapshot while a page chunk is evaluated. */
+html.vice-route-forward #app {
+  animation: vice-route-forward 720ms cubic-bezier(.22, 1, .36, 1) both;
 }
 
-html.vice-route-transition::view-transition-old(root),
-html.vice-route-transition::view-transition-new(root) {
-  mix-blend-mode: normal;
+html.vice-route-back #app {
+  animation: vice-route-back 720ms cubic-bezier(.22, 1, .36, 1) both;
 }
 
-html.vice-route-transition::view-transition-old(root) {
-  z-index: 1;
-  animation: vice-route-old 260ms cubic-bezier(.4, 0, 1, 1) both;
+@keyframes vice-route-forward {
+  from { opacity: 0; transform: translate3d(48px, 0, 0) scale(.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
-html.vice-route-transition::view-transition-new(root) {
-  z-index: 2;
-  animation: vice-route-new 420ms cubic-bezier(.22, 1, .36, 1) both;
-}
-
-html.vice-route-transition .fade-slide-y-enter-active,
-html.vice-route-transition .fade-slide-y-leave-active,
-html.vice-route-transition .fade-slide-x-enter-active,
-html.vice-route-transition .fade-slide-x-leave-active {
-  transition: none !important;
-}
-
-html.vice-route-transition .fade-slide-y-enter-from,
-html.vice-route-transition .fade-slide-y-leave-to,
-html.vice-route-transition .fade-slide-x-enter-from,
-html.vice-route-transition .fade-slide-x-leave-to {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-html.vice-route-transition .vp-nav-screen {
-  display: none;
-}
-
-/* Fallback for browsers without document.startViewTransition. */
-html.vice-route-fallback {
-  animation: vice-route-fallback 460ms cubic-bezier(.22, 1, .36, 1) both;
-}
-
-@keyframes vice-route-old {
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(-14px); }
-}
-
-@keyframes vice-route-new {
-  from { opacity: 0; transform: translateX(14px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes vice-route-fallback {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes vice-route-back {
+  from { opacity: 0; transform: translate3d(-48px, 0, 0) scale(.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.vice-route-fallback { animation: none; }
+  html.vice-route-forward #app,
+  html.vice-route-back #app {
+    animation: none;
+  }
 }
